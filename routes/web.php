@@ -1,5 +1,6 @@
 <?php
 
+    use App\Http\Controllers\AuthenticationController;
     use Illuminate\Http\Request;
     use Illuminate\Support\Facades\Route;
 
@@ -13,13 +14,23 @@
     | contains the "web" middleware group. Now create something great!
     |
     */
-
-
-    Route::get('/', function () {
-        return view('welcome');
+	Route::get('/login', function() {
+		return redirect()->route('auth.login');
+	})->name('login');
+    Route::controller(AuthenticationController::class)->name('auth.')->group(function () {
+        Route::get('/', function () {
+            return redirect()->route('auth.login');
+        });
+        Route::get('/login', 'loginView')->name('login');
+        Route::get('/lock', 'lockView')->name('lock');
+		Route::post('/login', 'loginRequest')->name('request.login');
+		Route::post('/logout', 'logoutRequest')->name('request.logout');
     });
-    Route::get('/home', function (Request $request) {
-        return [
-            'request' => $request->all()
-        ];
-    });
+	Route::middleware(['auth'])->name('app.')->group(function() {
+		Route::get('/', function () {
+			return redirect()->route('app.dashboard');
+		});
+		Route::get('/dashboard', function () {
+		
+		})->name('dashboard');
+	});
