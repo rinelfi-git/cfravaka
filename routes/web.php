@@ -26,11 +26,10 @@
 		Route::post('/login', 'loginRequest')->name('request.login');
 		Route::post('/logout', 'logoutRequest')->name('request.logout');
     });
-	Route::middleware(['auth'])->name('app.')->group(function() {
+	Route::middleware(['auth'])->controller(\App\Http\Controllers\ApplicationController::class)->name('app.')->group(function() {
 		Route::get('/', function () {
 			return redirect()->route('app.dashboard');
 		});
-		Route::get('/dashboard', function () {
-		
-		})->name('dashboard');
+		Route::get('/dashboard', 'dashboardView')->name('dashboard');
+		Route::get('/students', 'studentsView')->name('students');
 	});
