@@ -45,7 +45,7 @@
 							</a>
 						</li>
 						<li class="nav-item">
-							<a href="/partner-list" class="nav-link">
+							<a href="{{route('app.list.partners')}}" @class(['nav-link', 'active' => request()->route()->getName() === 'app.list.partners'])>
 								<i class="far fa-circle nav-icon"></i>
 								<p>Partenaire</p>
 							</a>

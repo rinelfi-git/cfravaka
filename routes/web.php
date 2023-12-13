@@ -1,9 +1,10 @@
 <?php
-	
+
+	use App\Http\Controllers\ApplicationController;
 	use App\Http\Controllers\AuthenticationController;
 	use Illuminate\Http\Request;
 	use Illuminate\Support\Facades\Route;
-	
+
 	/*
 	|--------------------------------------------------------------------------
 	| Web Routes
@@ -23,7 +24,7 @@
 		Route::post('/login', 'loginRequest')->name('request.login');
 		Route::post('/logout', 'logoutRequest')->name('request.logout');
 	});
-	Route::middleware(['auth'])->controller(\App\Http\Controllers\ApplicationController::class)->name('app.')->group(function () {
+	Route::middleware(['auth'])->controller(ApplicationController::class)->name('app.')->group(function () {
 		Route::get('/', function () {
 			return redirect()->route('app.dashboard');
 		});
@@ -32,4 +33,9 @@
 		Route::get('/students-datatable', 'studentTableList')->name('list.students.datatable');
 		Route::post('/student', 'studentGet')->name('list.students.get');
 		Route::post('/students', 'studentsForm')->name('list.students.form');
+
+		Route::get('/partners', 'partnersView')->name('list.partners');
+		Route::get('/partners-datatable', 'partnerTableList')->name('list.partners.datatable');
+		Route::post('/partner', 'partnerGet')->name('list.partners.get');
+		Route::post('/partners', 'partnersForm')->name('list.partners.form');
 	});

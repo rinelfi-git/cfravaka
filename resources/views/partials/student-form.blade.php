@@ -103,14 +103,14 @@
 				type : 'json',
 				data : data,
 				success : function(response){
-					if(typeof studentDatatable !== 'undefined') {
+					if (typeof studentDatatable !== 'undefined') {
 						studentDatatable.ajax.reload();
 					}
 					itsModalDom.modal('hide');
 					resetForm();
 				},
 				error : function(err1, err2, err3){
-				
+
 				}
 			})
 		});
@@ -120,8 +120,8 @@
 			format : 'DD-MM-YYYY'
 		});
 		$('[name=phone]').inputmask({
-			mask: '+261 39 99 999 99',
-			greedy: false,
+			mask : '+261 39 99 999 99',
+			greedy : false,
 		});
 	})
 </script>

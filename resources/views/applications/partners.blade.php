@@ -1,25 +1,22 @@
 @extends('authed')
-@section('title', 'Étudiants')
+@section('title', 'Partenaires')
 @section('wrapped-content')
 <div class="card">
     <div class="card-header">
         <div class="card-tools">
-            <button type="button" class="btn bg-gradient-dark" data-toggle="modal" data-target="#student-modal-form">
+            <button type="button" class="btn bg-gradient-dark" data-toggle="modal" data-target="#partner-modal-form">
                 Nouvelle entrée
             </button>
-            @include('partials.student-form')
+            @include('partials.partner-form', ['students' => $students])
         </div>
     </div>
     <div class="card-body pb-0">
         <div class="card-body">
-            <table id="student-datatable" class="table table-bordered table-striped">
+            <table id="partner-datatable" class="table table-bordered table-striped">
                 <thead>
                     <tr>
                         <th>Nom</th>
-                        <th>Email</th>
-                        <th>Téléphone</th>
-                        <th>Date du test</th>
-                        <th>Résultat du test</th>
+                        <th>Dirigeant</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -33,16 +30,16 @@
 @endsection
 @section('dynamic-script')
 <script>
-    var studentDatatable;
+    var partnerDatatable;
 
-    function studentDataTable(options) {
-        $('#student-datatable').on('click', '.open-update-modal', function() {
+    function partnerDataTable(options) {
+        $('#partner-datatable').on('click', '.open-update-modal', function() {
             var self = $(this);
             if (typeof resetForm === 'function') {
-                $('#student-modal-form [name]').prop('disabled', true);
+                $('#partner-modal-form [name]').prop('disabled', true);
                 resetForm.call();
             }
-            $('#student-modal-form').modal('show');
+            $('#partner-modal-form').modal('show');
             $.ajax({
                 url: self.data('route'),
                 method: 'post',
@@ -53,15 +50,15 @@
                 },
                 success: function(response) {
                     $.each(response, function(key, value) {
-                        var inputDom = $('#student-modal-form [name="' + key + '"]');
+                        var inputDom = $('#partner-modal-form [name="' + key + '"]');
                         inputDom.val(value);
                         inputDom.trigger('change');
                     });
-                    $('#student-modal-form [name]').prop('disabled', false);
+                    $('#partner-modal-form [name]').prop('disabled', false);
                 }
             });
         });
-        return $('#student-datatable').DataTable({
+        return $('#partner-datatable').DataTable({
             processing: true,
             serverSide: true,
             ajax: {
@@ -72,16 +69,7 @@
                     data: 'name'
                 },
                 {
-                    data: 'email'
-                },
-                {
-                    data: 'phone'
-                },
-                {
-                    data: 'test_date'
-                },
-                {
-                    data: 'test_result'
+                    data: 'owner'
                 },
                 {
                     data: 'action',
@@ -93,8 +81,8 @@
     }
 
     $(function() {
-        studentDatatable = studentDataTable({
-            dataSource: "{{route('app.list.students.datatable')}}",
+        partnerDatatable = partnerDataTable({
+            dataSource: "{{route('app.list.partners.datatable')}}",
             token: "{{session('_token')}}"
         });
     })
