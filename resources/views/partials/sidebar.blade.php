@@ -7,18 +7,8 @@
 	
 	<!-- Sidebar -->
 	<div class="sidebar">
-		<!-- Sidebar user (optional) -->
-		<div class="user-panel mt-3 pb-3 mb-3 d-flex">
-			<div class="image">
-				<img src="../../dist/img/user2-160x160.jpg" class="img-circle elevation-2" alt="User Image" />
-			</div>
-			<div class="info">
-				<span class="d-block">Alexander Pierce</span>
-			</div>
-		</div>
-		
 		<!-- SidebarSearch Form -->
-		<div class="form-inline">
+		<div class="form-inline mt-2">
 			<div class="input-group" data-widget="sidebar-search">
 				<input class="form-control form-control-sidebar" type="search" placeholder="Search" aria-label="Search" />
 				<div class="input-group-append">
@@ -34,13 +24,13 @@
 			<ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
 				<!-- Add icons to the links using the .nav-icon class with font-awesome or any other icon font library -->
 				<li class="nav-item">
-					<a href="/dashboard" class="nav-link">
+					<a href="/dashboard" @class(['nav-link', 'active' => request()->route()->getName() === 'app.dashboard']) class="nav-link">
 						<i class="nav-icon fas fa-tachometer-alt"></i>
 						<p>Tableau de bord</p>
 					</a>
 				</li>
-				<li class="@class(['nav-item', 'menu-is-opening menu-open' => true])">
-					<a href="#" class="@class(['nav-link', 'active' => true])">
+				<li @class(['nav-item', 'menu-is-opening menu-open' => \Illuminate\Support\Str::startsWith(request()->route()->getName(), 'app.list')])>
+					<a href="#" @class(['nav-link', 'active' => \Illuminate\Support\Str::startsWith(request()->route()->getName(), 'app.list')])>
 						<i class="nav-icon fas fa-copy"></i>
 						<p>
 							Listes
@@ -49,7 +39,7 @@
 					</a>
 					<ul class="nav nav-treeview">
 						<li class="nav-item">
-							<a href="/student-list" class="nav-link">
+							<a href="{{route('app.list.students')}}" @class(['nav-link', 'active' => request()->route()->getName() === 'app.list.students'])>
 								<i class="far fa-circle nav-icon"></i>
 								<p>Étudiant</p>
 							</a>

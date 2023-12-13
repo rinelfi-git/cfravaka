@@ -10,7 +10,7 @@
     <div class="card-body">
       <p class="login-box-msg">Vous devez être connécté.e</p>
 
-      <form action="{{route('auth.request.login')}}" method="post" autocomplete="off">
+      <form action="{{route('request.login')}}" method="post" autocomplete="off">
         @csrf
         <div class="input-group mb-3">
           <input name="usernameOrEmail" type="text" class="form-control" placeholder="Nom d'utilisateur" autocomplete="username">

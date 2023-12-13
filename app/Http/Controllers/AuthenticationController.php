@@ -10,6 +10,13 @@
 	
 	class AuthenticationController extends Controller {
 		public function loginView() {
+//			$user = new User([
+//				'username' => 'rinefli',
+//				'name'     => 'Rijaniaina Elie Fidèle',
+//				'email'    => 'elierijaniaina@gmail.com',
+//				'password' => Hash::make("c'est facile")
+//			]);
+//			$user->save();
 			return view('authentications.login');
 		}
 		
@@ -23,14 +30,22 @@
 			$attempts = $dbUser->findForPassport($credentials['usernameOrEmail']);
 			$attempts = !empty($attempts) ? $attempts->toArray() : [];
 			$attempts['password'] = $credentials['password'];
-			if(Auth::attempt($attempts)) {
+			if (Auth::attempt($attempts)) {
 				$request->session()->regenerate();
+				unset($attempts['password']);
 				return redirect()->intended(route('app.dashboard'));
 			}
-			return redirect()->route('auth.login');
+			$errorMessage = [];
+			if (empty($attempts['email'])) {
+				$errorMessage['usernameOrEmail'] = "Le nom d'utilisateur ou le mail n'existe pas";
+			} else {
+				$errorMessage['password'] = "Le mot de passe est incorrect";
+			}
+			return $errorMessage;
 		}
 		
 		public function logoutRequest() {
-			return null;
+			Auth::logout();
+			return redirect()->route('login');
 		}
 	}
