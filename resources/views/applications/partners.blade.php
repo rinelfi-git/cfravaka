@@ -11,8 +11,8 @@
         </div>
     </div>
     <div class="card-body pb-0">
-        <div class="card-body">
-            <table id="partner-datatable" class="table table-bordered table-striped">
+        <div class="card-body table-responsive">
+            <table id="partner-datatable" class="table table-bordered table-striped dt-responsive nowrap">
                 <thead>
                     <tr>
                         <th>Nom</th>
@@ -21,7 +21,6 @@
                     </tr>
                 </thead>
                 <tbody>
-
                 </tbody>
             </table>
         </div>
@@ -59,6 +58,7 @@
             });
         });
         return $('#partner-datatable').DataTable({
+            responsive: true,
             processing: true,
             serverSide: true,
             ajax: {

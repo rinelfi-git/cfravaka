@@ -11,8 +11,8 @@
         </div>
     </div>
     <div class="card-body pb-0">
-        <div class="card-body">
-            <table id="student-datatable" class="table table-bordered table-striped">
+        <div class="card-body table-responsive">
+            <table id="student-datatable" class="table table-bordered table-striped dt-responsive nowrap">
                 <thead>
                     <tr>
                         <th>Nom</th>
@@ -62,6 +62,7 @@
             });
         });
         return $('#student-datatable').DataTable({
+            responsive: true,
             processing: true,
             serverSide: true,
             ajax: {
