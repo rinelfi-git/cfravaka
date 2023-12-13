@@ -33,6 +33,7 @@
 			if (Auth::attempt($attempts)) {
 				$request->session()->regenerate();
 				unset($attempts['password']);
+				session($attempts);
 				return redirect()->intended(route('app.dashboard'));
 			}
 			$errorMessage = [];
