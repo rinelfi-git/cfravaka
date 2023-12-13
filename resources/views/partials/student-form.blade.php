@@ -27,7 +27,7 @@
 						<label>Date du test</label>
 						<div class="input-group date" id="test_date" data-target-input="nearest">
 	                        <input name="test_date" type="text" class="form-control datetimepicker-input"
-	                               data-target="#test_date" value="{{date('d-m-Y')}}"/>
+	                               data-target="#test_date" value=""/>
 	                        <div class="input-group-append" data-target="#test_date" data-toggle="datetimepicker">
                             <div class="input-group-text"><i class="fa fa-calendar"></i></div>
                         </div>
