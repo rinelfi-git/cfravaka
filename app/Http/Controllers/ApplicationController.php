@@ -36,7 +36,6 @@
 		
 		public function studentGet(Request $request) {
 			$student = Student::find($request->input('id'));
-			
 			// Faites quelque chose avec l'objet $student (par exemple, le renvoyer en tant que JSON)
 			return $student;
 		}
