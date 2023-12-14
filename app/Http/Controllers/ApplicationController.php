@@ -8,7 +8,8 @@
 	use App\Models\FormationSubCategory;
 	use App\Models\FormationType;
 	use App\Models\Partner;
-	use App\Models\Student;
+use App\Models\Session;
+use App\Models\Student;
 	use App\Models\User;
 	use Illuminate\Http\Request;
 	use Yajra\DataTables\DataTables;
@@ -78,7 +79,6 @@
 					return $student['id'];
 				}, $students->toArray()),
 			];
-			// Faites quelque chose avec l'objet $partner (par exemple, le renvoyer en tant que JSON)
 			return $output;
 		}
 
@@ -105,6 +105,7 @@
 			return $partner;
 		}
 
+        // formation
 		public function formationsView() {
 			return view('applications.formations', ['partners' => Partner::select(['name', 'id'])->get()]);
 		}
@@ -213,5 +214,26 @@
 				$output['partner_id'] = !empty($partner) ? $partner->id : null;
 			}
 			return response()->json($output);
+		}
+
+        // session
+		public function sessionsView() {
+			return view('applications.sessions', []);
+		}
+
+		public function sessionTableList(Request $request) {
+
+		}
+
+		public function sessionGet(Request $request) {
+
+		}
+
+		public function sessionDuplicate(int $id) {
+
+		}
+
+		public function sessionsForm(FormationTypeRequest $request) {
+
 		}
 	}

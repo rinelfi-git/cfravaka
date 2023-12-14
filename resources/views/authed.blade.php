@@ -65,4 +65,9 @@
 	<script src="/plugins/bootstrap-colorpicker/js/bootstrap-colorpicker.min.js"></script>
 	<!-- Tempusdominus Bootstrap 4 -->
 	<script src="/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script>
+    <script>
+        $(function() {
+            $(document.body).removeClass().addClass('sidebar-mini layout-fixed');
+        })
+    </script>
 @endsection
