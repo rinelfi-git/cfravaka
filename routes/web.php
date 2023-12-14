@@ -38,4 +38,9 @@
 		Route::get('/partners-datatable', 'partnerTableList')->name('list.partners.datatable');
 		Route::post('/partner', 'partnerGet')->name('list.partners.get');
 		Route::post('/partners', 'partnersForm')->name('list.partners.form');
+
+		Route::get('/formations', 'formationsView')->name('list.formations');
+		Route::get('/formations-datatable', 'formationTableList')->name('list.formations.datatable');
+		Route::post('/formation', 'formationGet')->name('list.formations.get');
+		Route::post('/formations', 'formationsForm')->name('list.formations.form');
 	});

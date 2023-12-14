@@ -21,7 +21,7 @@ class ApplicationController extends Controller {
     }
 
     public function studentTableList() {
-        $students = Student::select(['id', 'name', 'email', 'phone', 'test_date', 'test_result']);
+        $students = Student::select(['id', 'name', 'email', 'phone', 'test_date', 'test_result'])->get();
         return DataTables::of($students)
             ->addColumn('test_date', function ($student) {
                 setlocale(LC_TIME, 'fr_FR');
@@ -53,7 +53,7 @@ class ApplicationController extends Controller {
     }
 
     public function partnerTableList() {
-        $partners = Partner::select(['id', 'name', 'owner']);
+        $partners = Partner::select(['id', 'name', 'owner'])->get();
         return DataTables::of($partners)
             ->addColumn('action', function ($partner) {
                 return '
@@ -84,9 +84,9 @@ class ApplicationController extends Controller {
         $validated = $request->validated();
         $validated['students'] = $validated['students'] ?? [];
         if (empty($validated['id'])) {
-            $formationType = FormationType::create(['name' => $validated['name'] . ' formation']);
+            $formation = FormationType::create(['name' => $validated['name'] . ' formation']);
             $partner = new Partner($validated);
-            $formationType->partner()->save($partner);
+            $formation->partner()->save($partner);
         } else {
             $partner = Partner::find($validated['id']);
             $students = Student::where(['partner_id' => $partner->id]);
@@ -103,24 +103,24 @@ class ApplicationController extends Controller {
         return $partner;
     }
 
-    public function formationTypesView() {
-        return view('applications.formationTypes', ['students' => Student::select(['name', 'id'])->get()]);
+    public function formationsView() {
+        return view('applications.formations', ['partners' => Partner::select(['name', 'id'])->get()]);
     }
 
-    public function formationTypeTableList() {
+    public function formationTableList() {
         return null;
     }
 
-    public function formationTypeGet(Request $request) {
-        $formationType = Partner::find($request->input('id'));
-        // Faites quelque chose avec l'objet $formationType (par exemple, le renvoyer en tant que JSON)
-        return $formationType;
+    public function formationGet(Request $request) {
+        $formation = Partner::find($request->input('id'));
+        // Faites quelque chose avec l'objet $formation (par exemple, le renvoyer en tant que JSON)
+        return $formation;
     }
 
-    public function formationTypesForm(PartnerRequest $request) {
+    public function formationsForm(PartnerRequest $request) {
         $validated = $request->validated();
         if (empty($validated['id'])) {
-            $formationType = Partner::create($validated);
+            $formation = Partner::create($validated);
         }
         return $validated;
     }

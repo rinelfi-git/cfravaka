@@ -1,26 +1,28 @@
 @extends('authed')
-@section('title', 'Partenaires')
+@section('title', 'Type de formations')
 @section('wrapped-content')
 <div class="card">
     <div class="card-header">
         <div class="card-tools">
-            <button type="button" class="btn bg-gradient-dark" data-toggle="modal" data-target="#partner-modal-form">
+            <button type="button" class="btn bg-gradient-dark" data-toggle="modal" data-target="#formation-modal-form">
                 Nouvelle entrée
             </button>
-            @include('partials.forms.partner-form', ['students' => $students])
+            @include('partials.forms.formation-form', ['partners' => $partners])
         </div>
     </div>
     <div class="card-body pb-0">
         <div class="card-body table-responsive">
-            <table id="partner-datatable" class="table table-bordered table-striped dt-responsive nowrap">
+            <table id="formation-datatable" class="table table-bordered table-striped dt-responsive nowrap">
                 <thead>
                     <tr>
                         <th>Nom</th>
-                        <th>Dirigeant</th>
+                        <th>Sous catégories</th>
+                        <th>Disponible pour</th>
                         <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
+
                 </tbody>
             </table>
         </div>
@@ -29,16 +31,15 @@
 @endsection
 @section('dynamic-script')
 <script>
-    var partnerDatatable;
-
-    function partnerDataTable(options) {
-        $('#partner-datatable').on('click', '.open-update-modal', function() {
+    var formationDatatable;
+    function formationDataTable(options) {
+        $('#formation-datatable').on('click', '.open-update-modal', function() {
             var self = $(this);
             if (typeof resetForm === 'function') {
-                $('#partner-modal-form [name]').prop('disabled', true);
+                $('#formation-modal-form [name]').prop('disabled', true);
                 resetForm.call();
             }
-            $('#partner-modal-form').modal('show');
+            $('#formation-modal-form').modal('show');
             $.ajax({
                 url: self.data('route'),
                 method: 'post',
@@ -49,15 +50,15 @@
                 },
                 success: function(response) {
                     $.each(response, function(key, value) {
-                        var inputDom = $('#partner-modal-form [name="' + key + '"]');
+                        var inputDom = $('#formation-modal-form [name="' + key + '"]');
                         inputDom.val(value);
                         inputDom.trigger('change');
                     });
-                    $('#partner-modal-form [name]').prop('disabled', false);
+                    $('#formation-modal-form [name]').prop('disabled', false);
                 }
             });
         });
-        return $('#partner-datatable').DataTable({
+        return $('#formation-datatable').DataTable({
             responsive: true,
             processing: true,
             serverSide: true,
@@ -69,7 +70,16 @@
                     data: 'name'
                 },
                 {
-                    data: 'owner'
+                    data: 'email'
+                },
+                {
+                    data: 'phone'
+                },
+                {
+                    data: 'test_date'
+                },
+                {
+                    data: 'test_result'
                 },
                 {
                     data: 'action',
@@ -81,8 +91,8 @@
     }
 
     $(function() {
-        partnerDatatable = partnerDataTable({
-            dataSource: "{{route('app.list.partners.datatable')}}",
+        formationDatatable = formationDataTable({
+            dataSource: "{{route('app.list.formations.datatable')}}",
             token: "{{session('_token')}}"
         });
     })

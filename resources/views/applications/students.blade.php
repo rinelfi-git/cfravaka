@@ -7,7 +7,7 @@
             <button type="button" class="btn bg-gradient-dark" data-toggle="modal" data-target="#student-modal-form">
                 Nouvelle entrée
             </button>
-            @include('partials.student-form')
+            @include('partials.forms.student-form')
         </div>
     </div>
     <div class="card-body pb-0">
