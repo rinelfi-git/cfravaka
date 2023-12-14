@@ -1,7 +1,7 @@
 <?php
-	
+
 	namespace App\Http\Controllers;
-	
+
 	use App\Http\Requests\FormationTypeRequest;
 	use App\Http\Requests\PartnerRequest;
 	use App\Http\Requests\SaveStudentRequest;
@@ -12,16 +12,16 @@
 	use App\Models\User;
 	use Illuminate\Http\Request;
 	use Yajra\DataTables\DataTables;
-	
+
 	class ApplicationController extends Controller {
 		public function dashboardView() {
 			return view('applications.dashboard');
 		}
-		
+
 		public function studentsView() {
 			return view('applications.students', ['partners' => Partner::select(['id', 'name'])->get()]);
 		}
-		
+
 		public function studentTableList() {
 			$students = Student::select(['id', 'name', 'email', 'phone', 'test_date', 'test_result'])->get();
 			return DataTables::of($students)
@@ -38,22 +38,22 @@
                      </div>';
 			                 })->make(true);
 		}
-		
+
 		public function studentGet(Request $request) {
 			$student = Student::find($request->input('id'));
 			// Faites quelque chose avec l'objet $student (par exemple, le renvoyer en tant que JSON)
 			return $student;
 		}
-		
+
 		public function studentsForm(SaveStudentRequest $request) {
 			$validated = $request->validated();
 			return empty($validated['id']) ? Student::create($validated) : Student::where('id', $validated['id'])->update($validated);
 		}
-		
+
 		public function partnersView() {
 			return view('applications.partners', ['students' => Student::select(['name', 'id'])->get()]);
 		}
-		
+
 		public function partnerTableList() {
 			$partners = Partner::select(['id', 'name', 'owner'])->get();
 			return DataTables::of($partners)
@@ -66,7 +66,7 @@
                      </div>';
 			                 })->make(true);
 		}
-		
+
 		public function partnerGet(Request $request) {
 			$partner = Partner::find($request->input('id'));
 			$students = Student::select(['id'])->where(['partner_id' => $partner->id])->get();
@@ -81,7 +81,7 @@
 			// Faites quelque chose avec l'objet $partner (par exemple, le renvoyer en tant que JSON)
 			return $output;
 		}
-		
+
 		public function partnersForm(PartnerRequest $request) {
 			$validated = $request->validated();
 			$validated['students'] = $validated['students'] ?? [];
@@ -104,11 +104,11 @@
 			Student::whereIn('id', $validated['students'])->update(['partner_id' => $partner->id]);
 			return $partner;
 		}
-		
+
 		public function formationsView() {
 			return view('applications.formations', ['partners' => Partner::select(['name', 'id'])->get()]);
 		}
-		
+
 		public function formationTableList(Request $request) {
 			$formationTypes = FormationType::select(['id', 'name']);
 			return DataTables::of($formationTypes)
@@ -137,7 +137,7 @@
 			                 })
 			                 ->rawColumns(['action', 'subcategories'])->make(true);
 		}
-		
+
 		public function formationGet(Request $request) {
 			$formation = FormationType::find($request->input('id'));
 			$output = $formation->toArray();
@@ -145,7 +145,7 @@
 			$output['partner_id'] = !empty($formation->partner) ? $formation->partner->id : null;
 			return response()->json($output);
 		}
-		
+
 		public function formationDuplicate(int $id) {
 			$formation = FormationType::find($id);
 			$subCategories = $formation->formationSubCategories;
@@ -158,7 +158,7 @@
 			}
 			return response()->json($formationClone);
 		}
-		
+
 		public function formationsForm(FormationTypeRequest $request) {
 			$validated = $request->validated();
 			if (empty($validated['id'])) {
@@ -176,7 +176,7 @@
 				$formationType = FormationType::find($validated['id']);
 				$formationType->update($validated);
 				$subCategories = $formationType->formationSubCategories()->select('id')->pluck('id');
-				
+
 				$deleteSubCategories = array_map(function ($subCategory) {
 					return intval($subCategory['id']);
 				}, $validated['subcategories']);
@@ -187,12 +187,20 @@
 				$newSubCategories = array_filter($validated['subcategories'], function($subCategory) {
 					return empty($subCategory['id']);
 				});
+                $oldSubCategories = array_filter($validated['subcategories'], function($subCategory) {
+					return !empty($subCategory['id']);
+				});
 				$output = $formationType->toArray();
-				$output['subcategories'] = $formationType->formationSubCategories->toArray();
+				$output['subcategories'] = [];
 				foreach ($newSubCategories as $subcategory) {
 					$subcategory = new FormationSubCategory($subcategory);
 					$formationType->formationSubCategories()->save($subcategory);
 					$output['subcategories'][] = $subcategory->toArray();
+				}
+                foreach ($oldSubCategories as $subcategory) {
+					$subCategory = FormationSubCategory::find($subcategory['id']);
+                    $subCategory->update($subcategory);
+					$output['subcategories'][] = $subCategory->toArray();
 				}
 				$partner = $formationType->partner;
 				if(!empty($partner) && empty($validated['partner_id'])) {
