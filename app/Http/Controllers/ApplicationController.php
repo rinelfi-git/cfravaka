@@ -17,7 +17,7 @@ class ApplicationController extends Controller {
     }
 
     public function studentsView() {
-        return view('applications.students');
+        return view('applications.students', ['partners' => Partner::select(['id', 'name'])->get()]);
     }
 
     public function studentTableList() {
