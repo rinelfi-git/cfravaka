@@ -84,9 +84,6 @@
                 .html('<span class="fa fa-times"></span>')
                 .on('click', function() {
                     var self = $(this);
-                    if(subCategoriesFormArray.length <= 1) {
-                        return true;
-                    }
                     subCategoriesFormArray.splice(self.data('index'), 1);
                     buildArrayForm(target);
                 });
@@ -297,7 +294,7 @@
                         $('<div>')
                         .addClass('sub-category-close')
                         .append(
-                            closeFormDom
+                            subCategoriesFormArray.length <= 1 ? null : closeFormDom
                         )
                     )
                 )
