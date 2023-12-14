@@ -219,10 +219,47 @@ class ApplicationController extends Controller {
 
     // session
     public function sessionsView() {
-        return view('applications.sessions', ['students' => Student::select(['name', 'id'])->get()->toArray()]);
+        $query = Student::with(['registers' => function ($query) {
+            // Sélectionnez la dernière inscription basée sur la date ou un autre critère
+            $query->latest()->first();
+        }])->get()->map(function ($student) {
+            // Vérifiez si l'étudiant a des inscriptions
+            if ($student->registers->isNotEmpty()) {
+                // Récupérez le niveau de la dernière inscription
+                $level = $student->registers->first()->level->label ?? null;
+            } else {
+                // Si pas d'inscriptions, utilisez 'test_result'
+                $level = $student->test_result;
+            }
+
+            return [
+                'id' => $student->id,
+                'name' => $student->name,
+                'level' => $level,
+            ];
+        });
+        return view('applications.sessions', ['students' => $query->toArray()]);
     }
 
     public function sessionTableList(Request $request) {
+    }
+
+    public function studentRegistrationDataRequest(Request $request) {
+        if ($request->get('formation') !== null) {
+            $raw = FormationType::get();
+            return $raw->filter(function($formationType) use($request) {
+                $isMatchSearch = empty($request->input('recherche')) || \str_contains(strtolower($formationType->name), strtolower($request->input('recherche')));
+                $partner = $formationType->partner;
+                $userCanUse = $partner === null || $partner->students()->where('id', $request->input('student_id'))->exists();
+                return $isMatchSearch && $userCanUse;
+            })->flatMap(function ($formationType) {
+                return $formationType->formationSubCategories->map(function ($subCategory) use($formationType) {
+                    return [
+                        'name' => $formationType->name,
+                    ];
+                });
+            });
+        }
     }
 
     public function sessionGet(Request $request) {

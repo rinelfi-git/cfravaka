@@ -80,6 +80,7 @@
     </div>
 </div>
 <script>
+    var registrationInfoRoute = "{{route('app.list.sessions.registration.info.get')}}";
     var phpStudents = JSON.parse(JSON.stringify(<?= json_encode($students) ?>));
     var registerManager = {
         not: [],
@@ -95,9 +96,9 @@
     phpStudents.forEach(function(phpStudent) {
         registerManager.not.push({
             checked: false,
-            id: phpStudent.name,
+            id: phpStudent.id,
             name: phpStudent.name,
-            prevLevel: 'Level'
+            prevLevel: phpStudent.level
         })
     });
     var buildRegisterManager = function(options) {
@@ -181,12 +182,15 @@
                 theme: 'bootstrap4',
                 multiple: true,
                 ajax: {
-                    url: 'https://api.github.com/search/repositories', // URL de la source de données
-                    dataType: 'json', // Type de données attendu en réponse
+                    url: registrationInfoRoute, // URL de la source de données
+                    method: 'post',
                     delay: 500, // Délai avant l'envoi de la requête après la saisie
                     data: function(params) {
                         return { // Paramètres envoyés avec la requête
                             recherche: params.term, // terme de recherche saisi par l'utilisateur
+                            _token: $('[name=_token]').val(),
+                            student_id: inList.id,
+                            formation: true,
                             page: params.page || 1
                         };
                     },
@@ -214,7 +218,6 @@
                 createTag: function(params) {
                     // Cette fonction est appelée lorsque l'utilisateur saisit une valeur
                     var term = $.trim(params.term);
-                    console.log('yes', levelSelectDom.select2('data'));
                     if (levelSelectDom.select2('data').length >= 1 || term === '') {
                         return null;
                     }
@@ -224,20 +227,15 @@
                         newTag: true // Indique qu'il s'agit d'une nouvelle valeur
                     };
                 },
-                templateResult: function(data) {
-                    if (data.newOption) {
-                        return '<em>Créer le tag "' + data.text + '"</em>';
-                    }
-
-                    return data.text;
-                },
                 ajax: {
-                    url: 'https://api.github.com/search/repositories', // URL de la source de données
+                    url: registrationInfoRoute, // URL de la source de données
+                    method: 'post',
                     dataType: 'json', // Type de données attendu en réponse
                     delay: 500, // Délai avant l'envoi de la requête après la saisie
                     data: function(params) {
                         return { // Paramètres envoyés avec la requête
                             recherche: params.term, // terme de recherche saisi par l'utilisateur
+                            _token: $('[name=_token]').val(),
                             page: params.page || 1
                         };
                     },
