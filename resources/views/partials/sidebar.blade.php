@@ -57,7 +57,7 @@
 							</a>
 						</li>
 						<li class="nav-item">
-							<a href="/session-list" class="nav-link">
+							<a href="{{route('app.list.sessions')}}" @class(['nav-link', 'active' => request()->route()->getName() === 'app.list.sessions'])>
 								<i class="far fa-circle nav-icon"></i>
 								<p>Session</p>
 							</a>

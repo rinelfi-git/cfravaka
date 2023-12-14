@@ -76,7 +76,7 @@
 	    is_monthly : false,
 	    is_editable : false
     };
-    var subCategoriesFormArray = [$.extend({}, defaultSubCategoryForm)];
+    var subCategoriesFormArray = [];
     var buildArrayForm = function(target){
 	    target.empty().html('');
 	    $.each(subCategoriesFormArray, function(index, subCategoryForm){
@@ -89,7 +89,7 @@
 				    subCategoriesFormArray.splice(self.data('index'), 1);
 				    buildArrayForm(target);
 			    });
-		    
+
 		    var modalitySelectDom = $('<select>')
 			    .addClass('custom-select')
 			    .append(
@@ -308,7 +308,7 @@
 	    return target;
     }
     var resetForm = function(){
-	    subCategoriesFormArray = [$.extend({}, defaultSubCategoryForm)];
+	    subCategoriesFormArray = [];
 	    buildArrayForm($('#formation-subcategories'));
 	    $('#formation-modal-form').find('[name]').filter(function(){
 		    return $(this).attr('name') !== '_token';
@@ -363,7 +363,7 @@
 				    resetForm();
 			    },
 			    error : function(err1, err2, err3){
-				   
+
 			    }
 		    })
 	    });
