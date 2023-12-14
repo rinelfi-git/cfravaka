@@ -10,6 +10,13 @@
 
         protected $table = 'sessions';
 
+        protected $fillable = [
+            'label',
+            'start_date',
+            'end_date',
+            'place',
+        ];
+
         public function groups() {
             return $this->belongsToMany(Group::class);
         }
