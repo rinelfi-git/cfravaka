@@ -47,7 +47,8 @@
 
 		Route::get('/sessions', 'sessionsView')->name('list.sessions');
 		Route::get('/sessions-datatable', 'sessionTableList')->name('list.sessions.datatable');
-		Route::post('/session', 'sessionGet')->name('list.sessions.get');
 		Route::get('/session-duplicate/{id}', 'sessionDuplicate')->name('list.session.duplicate');
+		Route::post('/session', 'sessionGet')->name('list.sessions.get');
+		Route::post('/session-registration-info', 'studentRegistrationDataRequest')->name('list.sessions.registration.info.get');
 		Route::post('/sessions', 'sessionsForm')->name('list.sessions.form');
 	});
