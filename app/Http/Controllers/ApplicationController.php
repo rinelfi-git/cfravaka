@@ -131,9 +131,8 @@
 				                 return !empty($partner) ? $partner->name : 'Tout le monde';
 			                 })
 			                 ->addColumn('action', function ($formationType) {
-				                 return view('partials.datatable-edit-button', [
-					                 'id'    => $formationType->id,
-					                 'route' => route('app.list.formations.get')
+				                 return view('partials.datatable-formation-type-action-button', [
+					                 'id' => $formationType->id
 				                 ])->render();
 			                 })
 			                 ->rawColumns(['action', 'subcategories'])->make(true);
@@ -145,6 +144,19 @@
 			$output['subcategories'] = $formation->formationSubCategories;
 			$output['partner_id'] = !empty($formation->partner) ? $formation->partner->id : null;
 			return response()->json($output);
+		}
+		
+		public function formationDuplicate(int $id) {
+			$formation = FormationType::find($id);
+			$subCategories = $formation->formationSubCategories;
+			$formationClone = $formation->replicate();
+			$formationClone->name .= ' - copie';
+			$formationClone->save();
+			foreach ($subCategories as $subCategory) {
+				$subCategoryClone = $subCategory->replicate();
+				$formationClone->formationSubCategories()->save($subCategoryClone);
+			}
+			return response()->json($formationClone);
 		}
 		
 		public function formationsForm(FormationTypeRequest $request) {
@@ -163,16 +175,34 @@
 			} else {
 				$formationType = FormationType::find($validated['id']);
 				$formationType->update($validated);
-				$subCategories = $formationType->formationSubCategories()->select(['id'])->get();
+				$subCategories = $formationType->formationSubCategories()->select('id')->pluck('id');
+				
 				$deleteSubCategories = array_map(function ($subCategory) {
-					return $subCategory['id'];
+					return intval($subCategory['id']);
 				}, $validated['subcategories']);
 				$deleteSubCategories = array_filter($subCategories->toArray(), function ($subCategory) use ($deleteSubCategories) {
-					return !in_array($subCategory['id'], $deleteSubCategories);
+					return !in_array($subCategory, $deleteSubCategories);
 				});
 				FormationSubCategory::whereIn('id', $deleteSubCategories)->delete();
-				
-				$output = null;
+				$newSubCategories = array_filter($validated['subcategories'], function($subCategory) {
+					return empty($subCategory['id']);
+				});
+				$output = $formationType->toArray();
+				$output['subcategories'] = $formationType->formationSubCategories->toArray();
+				foreach ($newSubCategories as $subcategory) {
+					$subcategory = new FormationSubCategory($subcategory);
+					$formationType->formationSubCategories()->save($subcategory);
+					$output['subcategories'][] = $subcategory->toArray();
+				}
+				$partner = $formationType->partner;
+				if(!empty($partner) && empty($validated['partner_id'])) {
+					$partner->update(['formation_type_id' => null]);
+				}
+				if (!empty($validated['partner_id']) && (empty($partner) || $partner->id !== $validated['partner_id'])){
+					$partner = Partner::find($validated['partner_id']);
+					$formationType->partner()->save($partner);
+				}
+				$output['partner_id'] = !empty($partner) ? $partner->id : null;
 			}
 			return response()->json($output);
 		}

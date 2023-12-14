@@ -22,6 +22,7 @@
 		 */
 		public function rules() {
 			return [
+				'id'                          => ['nullable', 'numeric'],
 				'name'                        => ['required'],
 				'partner_id'                  => ['nullable', 'numeric'],
 				'subcategories'               => ['required', 'array', 'min:1'],

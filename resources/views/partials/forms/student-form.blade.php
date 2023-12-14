@@ -100,7 +100,6 @@
 			if ($('[name=partner_id]').val()) {
 				data.partner_id = $('[name=partner_id]').val();
 			}
-			console.log('Save', data);
 			$.ajax({
 				url : self.attr('action'),
 				method : 'post',

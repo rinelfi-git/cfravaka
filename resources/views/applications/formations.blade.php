@@ -59,9 +59,18 @@
 					    $('#formation-modal-form [name]').prop('disabled', false);
 					    subCategoriesFormArray = response.subcategories.slice();
 					    buildArrayForm($('#formation-subcategories'));
-						console.log(subCategoriesFormArray);
 				    }
 			    });
+		    }).on('click', '.duplicate-record', function(event) {
+				event.preventDefault();
+				var self = $(this);
+				$.get({
+					url: self.attr('href'),
+					dataType: 'json',
+					success: function() {
+						formationDatatable.ajax.reload();
+					}
+				});
 		    })
 		    .DataTable({
 			    responsive : true,
@@ -78,11 +87,7 @@
 				    {
 					    data : 'subcategories',
 					    orderable : false,
-					    searchable : false,
-					    render: function(data, type, row) {
-							console.log(type, row);
-							return type === 'display' ? data : $('<div>').text(data).html();
-					    }
+					    searchable : false
 				    },
 				    {
 					    data : 'availability',
