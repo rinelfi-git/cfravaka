@@ -4,7 +4,7 @@
 		<img src="../../dist/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: 0.8" />
 		<span class="brand-text font-weight-light">CF Ravaka SARL</span>
 	</a>
-	
+
 	<!-- Sidebar -->
 	<div class="sidebar">
 		<!-- SidebarSearch Form -->
@@ -18,7 +18,7 @@
 				</div>
 			</div>
 		</div>
-		
+
 		<!-- Sidebar Menu -->
 		<nav class="mt-2">
 			<ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
@@ -51,7 +51,7 @@
 							</a>
 						</li>
 						<li class="nav-item">
-							<a href="/formation-list" class="nav-link">
+							<a href="{{route('app.list.formations')}}" @class(['nav-link', 'active' => request()->route()->getName() === 'app.list.formations'])>
 								<i class="far fa-circle nav-icon"></i>
 								<p>Formation</p>
 							</a>
