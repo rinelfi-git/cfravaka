@@ -44,7 +44,6 @@
         }).each(function() {
             var self = $(this);
             if (self.data('select2')) {
-                console.log('value', self.val());
                 self.select2('destroy');
                 self.select2({
                     theme: 'bootstrap4',

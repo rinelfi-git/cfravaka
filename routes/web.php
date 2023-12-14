@@ -42,5 +42,6 @@
 		Route::get('/formations', 'formationsView')->name('list.formations');
 		Route::get('/formations-datatable', 'formationTableList')->name('list.formations.datatable');
 		Route::post('/formation', 'formationGet')->name('list.formations.get');
+		Route::get('/formation-duplicate/{id}', 'formationDuplicate')->name('list.formation.duplicate');
 		Route::post('/formations', 'formationsForm')->name('list.formations.form');
 	});
