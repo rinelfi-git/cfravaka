@@ -28,6 +28,7 @@
             </div>
             <div class="modal-body">
                 <form autocomplete="off" action="{{route('app.list.formations.form')}}">
+                    <input autocomplete="false" name="hidden" type="text" style="display:none;">
                     @csrf
                     <input type="hidden" name="id" value="">
                     <div class="row">

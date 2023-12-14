@@ -9,6 +9,7 @@
 			</div>
 			<div class="modal-body">
 				<form autocomplete="off" action="{{route('app.list.students.form')}}">
+					<input autocomplete="false" name="hidden" type="text" style="display:none;">
 					@csrf
 					<input type="hidden" name="id" value="">
 					<div class="form-group">
@@ -39,8 +40,11 @@
 					</div>
 					<div class="form-group">
 						<label>Membre du partenaire</label>
-						<select name="partner">
-							<option value="">Non affilié</option>
+						<select name="partner_id">
+							<option value="" selected="">Non affilié</option>
+							@foreach($partners as $partner)
+								<option value="{{$partner->id}}">{{$partner->name}}</option>
+							@endforeach
 						</select>
 					</div>
 				</form>
@@ -70,11 +74,11 @@
 		var itsModalDom = $('#student-modal-form');
 		var formDom = itsModalDom.find('form');
 		itsModalDom.on('show.bs.modal', function(){
-			$(this).find('[name="partner"]').select2({
+			$(this).find('[name="partner_id"]').select2({
 				theme : 'bootstrap4'
 			});
 		}).on('hidden.bs.modal', function(){
-			$(this).find('[name="partner"]').select2('destroy');
+			$(this).find('[name="partner_id"]').select2('destroy');
 		});
 		$('#submit-student-form').on('click', function(){
 			formDom.trigger('submit');
