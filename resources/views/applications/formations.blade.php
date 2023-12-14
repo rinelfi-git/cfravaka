@@ -78,7 +78,11 @@
 				    {
 					    data : 'subcategories',
 					    orderable : false,
-					    searchable : false
+					    searchable : false,
+					    render: function(data, type, row) {
+							console.log(type, row);
+							return type === 'display' ? data : $('<div>').text(data).html();
+					    }
 				    },
 				    {
 					    data : 'availability',

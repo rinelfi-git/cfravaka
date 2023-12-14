@@ -112,8 +112,19 @@
 		public function formationTableList(Request $request) {
 			$formationTypes = FormationType::select(['id', 'name']);
 			return DataTables::of($formationTypes)
-			                 ->addColumn('subcategories', function ($formationType) {
-				                 return '';
+			                 ->addColumn('subcategories', function (FormationType $formationType) {
+				                 $subcategories = $formationType->formationSubCategories->toArray();
+				                 return implode('', array_map(function ($subcategory) {
+					                 return view('partials.formation-subcategory', [
+						                 'modality'    => $subcategory['modality'],
+						                 'formula'     => $subcategory['formula'],
+						                 'convenience' => $subcategory['convenience'],
+						                 'timeRange'   => $subcategory['time_range'],
+						                 'price'       => $subcategory['price'],
+						                 'isMonthly'   => $subcategory['is_monthly'] ? 'Payment mensuel' : 'Payment par session',
+						                 'isEditable'  => $subcategory['is_editable'] ? 'Tarif modifiable' : 'Tarif fixe'
+					                 ])->render();
+				                 }, $subcategories));
 			                 })
 			                 ->addColumn('availability', function (FormationType $formationType) {
 				                 $partner = $formationType->partner;
@@ -124,12 +135,13 @@
 					                 'id'    => $formationType->id,
 					                 'route' => route('app.list.formations.get')
 				                 ])->render();
-			                 })->make(true);
+			                 })
+			                 ->rawColumns(['action', 'subcategories'])->make(true);
 		}
 		
 		public function formationGet(Request $request) {
 			$formation = FormationType::find($request->input('id'));
-			$output =$formation->toArray();
+			$output = $formation->toArray();
 			$output['subcategories'] = $formation->formationSubCategories;
 			$output['partner_id'] = !empty($formation->partner) ? $formation->partner->id : null;
 			return response()->json($output);
