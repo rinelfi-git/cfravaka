@@ -14,7 +14,7 @@ class AddTrainingIdToPartnersTable extends Migration
     public function up()
     {
         Schema::table('partners', function (Blueprint $table) {
-            $table->foreignId('training_id')->constrained('trainings');
+            $table->foreignId('training_id')->constrained('trainings')->nullOnDelete();
         });
     }
 

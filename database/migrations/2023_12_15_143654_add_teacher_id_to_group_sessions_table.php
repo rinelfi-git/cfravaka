@@ -12,7 +12,7 @@ class AddTeacherIdToGroupSessionsTable extends Migration {
      */
     public function up() {
         Schema::table('group_sessions', function (Blueprint $table) {
-            $table->foreignId('teacher_id')->nullable()->constrained('teachers');
+            $table->foreignId('teacher_id')->nullable()->constrained('teachers')->nullOnDelete();
         });
     }
 

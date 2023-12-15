@@ -12,7 +12,7 @@ class AddLevelIdToStudentsTable extends Migration {
      */
     public function up() {
         Schema::table('students', function (Blueprint $table) {
-            $table->foreignId('level_id')->nullable()->constrained('levels');
+            $table->foreignId('level_id')->nullable()->constrained('levels')->nullOnDelete();
         });
     }
 

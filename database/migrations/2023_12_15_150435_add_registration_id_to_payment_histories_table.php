@@ -14,7 +14,7 @@ class AddRegistrationIdToPaymentHistoriesTable extends Migration
     public function up()
     {
         Schema::table('payment_histories', function (Blueprint $table) {
-            $table->foreignId('registration_id')->constrained('registrations');
+            $table->foreignId('registration_id')->constrained('registrations')->nullOnDelete();
         });
     }
 

@@ -14,7 +14,7 @@ class AddLevelIdToRegistrationsTable extends Migration
     public function up()
     {
         Schema::table('registrations', function (Blueprint $table) {
-            $table->foreignId('level_id')->constrained('levels');
+            $table->foreignId('level_id')->constrained('levels')->nullOnDelete();
         });
     }
 
