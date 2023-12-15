@@ -7,7 +7,10 @@
             <button type="button" class="btn bg-gradient-dark" data-toggle="modal" data-target="#student-modal-form">
                 Nouvelle entrée
             </button>
-            @include('partials.forms.student-form', ['partners' => $partners])
+            @include('partials.forms.student-form', [
+            'partners' => $partners,
+            'levels' => $levels
+            ])
         </div>
     </div>
     <div class="card-body pb-0">

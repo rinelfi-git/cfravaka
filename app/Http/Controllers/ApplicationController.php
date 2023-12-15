@@ -8,7 +8,9 @@ use App\Http\Requests\SaveStudentRequest;
 use App\Http\Requests\SessionRequest;
 use App\Models\FormationSubCategory;
 use App\Models\FormationType;
+use App\Models\Level;
 use App\Models\Partner;
+use App\Models\Register;
 use App\Models\Session;
 use App\Models\Student;
 use App\Models\User;
@@ -21,7 +23,10 @@ class ApplicationController extends Controller {
     }
 
     public function studentsView() {
-        return view('applications.students', ['partners' => Partner::select(['id', 'name'])->get()]);
+        return view('applications.students', [
+            'partners' => Partner::select(['id', 'name'])->get(),
+            'levels' => Level::select('label')->get()
+        ]);
     }
 
     public function studentTableList() {
@@ -49,7 +54,23 @@ class ApplicationController extends Controller {
 
     public function studentsForm(SaveStudentRequest $request) {
         $validated = $request->validated();
-        return empty($validated['id']) ? Student::create($validated) : Student::where('id', $validated['id'])->update($validated);
+        if (empty($validated['id'])) {
+            $student = new Student($validated);
+            $student->save();
+        } else {
+            $student = Student::find($validated['id']);
+            $student->update($validated);
+            if (empty($validated['partner_id'])) {
+                $student->partner()->dissociate();
+                $student->save();
+            }
+        }
+        if (!empty($validated['partner_id'])) {
+            $partner = Partner::find($validated['partner_id']);
+            $student->partner()->associate($partner);
+            $student->save();
+        }
+        return  $student;
     }
 
     public function partnersView() {
@@ -238,7 +259,7 @@ class ApplicationController extends Controller {
                 'level' => $level,
             ];
         });
-        return view('applications.sessions', ['students' => $query->toArray()]);
+        return view('applications.sessions', ['students' => $query->toArray(), 'levels' => Level::select(['label'])->get()]);
     }
 
     public function sessionTableList(Request $request) {
@@ -247,15 +268,43 @@ class ApplicationController extends Controller {
     public function studentRegistrationDataRequest(Request $request) {
         if ($request->get('formation') !== null) {
             $raw = FormationType::get();
-            return $raw->filter(function($formationType) use($request) {
+            return $raw->filter(function ($formationType) use ($request) {
                 $isMatchSearch = empty($request->input('recherche')) || \str_contains(strtolower($formationType->name), strtolower($request->input('recherche')));
                 $partner = $formationType->partner;
                 $userCanUse = $partner === null || $partner->students()->where('id', $request->input('student_id'))->exists();
                 return $isMatchSearch && $userCanUse;
-            })->flatMap(function ($formationType) {
-                return $formationType->formationSubCategories->map(function ($subCategory) use($formationType) {
+            })->flatMap(function ($formationType) use ($request) {
+                return $formationType->formationSubCategories()->whereNotIn('id', $request->input('exclude') ?? [])->get()->map(function ($subCategory) use ($formationType) {
+                    $constructName = $formationType->name . " (";
+                    switch ($subCategory->modality) {
+                        case 'En ligne':
+                            $constructName .= "On|";
+                            break;
+                        default:
+                            $constructName .= "Off|";
+                            break;
+                    }
+                    switch ($subCategory->formula) {
+                        case 'Intensif':
+                            $constructName .= "In|";
+                            break;
+                        default:
+                            $constructName .= "Ex|";
+                            break;
+                    }
+                    switch ($subCategory->convenience) {
+                        case 'En particulier':
+                            $constructName .= "Si|";
+                            break;
+                        default:
+                            $constructName .= "Gr|";
+                            break;
+                    }
+                    $constructName .= $subCategory->time_range . ")";
                     return [
-                        'name' => $formationType->name,
+                        'id' => $subCategory->id,
+                        'name' => $constructName,
+                        'price' => $subCategory->price
                     ];
                 });
             });
@@ -269,6 +318,18 @@ class ApplicationController extends Controller {
     }
 
     public function sessionsForm(SessionRequest $request) {
-        return $request;
+        $validated = $request->validated();
+        if (empty($validated['id'])) {
+            $session = new Session($validated);
+            $validateStudents = $validated['students'] ?? [];
+            foreach($validateStudents as $validateStudent) {
+                $student = Student::find($validateStudent['id']);
+                $register = new Register([
+                    'date' => now(),
+                    'amount' => $validateStudent['amount']
+                ]);
+            }
+        }
+        return $student;
     }
 }

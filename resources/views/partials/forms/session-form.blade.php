@@ -51,7 +51,7 @@
                     <div class="dual-list-session">
                         <div class="original-list-section">
                             <div class="filter-section">
-                                <input type="text" class="form-control" />
+                                <input type="text" class="form-control" placeholder="Recherche" id="search-not" />
                             </div>
                             <div class="student-list" id="register-not"></div>
                         </div>
@@ -65,7 +65,7 @@
                         </div>
                         <div class="selected-list">
                             <div class="filter-section">
-                                <input type="text" class="form-control" />
+                                <input type="text" class="form-control" placeholder="Recherche" id="search-in" />
                             </div>
                             <div class="student-list" id="register-in"></div>
                         </div>
@@ -82,16 +82,10 @@
 <script>
     var registrationInfoRoute = "{{route('app.list.sessions.registration.info.get')}}";
     var phpStudents = JSON.parse(JSON.stringify(<?= json_encode($students) ?>));
+    var phpLevels = JSON.parse(JSON.stringify(<?= json_encode($levels) ?>));
     var registerManager = {
         not: [],
-        inList: [{
-            checked: true,
-            id: 1,
-            name: 'Raoza',
-            formations: [],
-            level: '',
-            showForm: false
-        }]
+        inList: []
     }
     phpStudents.forEach(function(phpStudent) {
         registerManager.not.push({
@@ -104,12 +98,28 @@
     var buildRegisterManager = function(options) {
         var targetNotDom = $('#register-not');
         var targetInDom = $('#register-in');
+        var searchInValue = $('#search-in').val();
+        var searchNotValue = $('#search-not').val();
         targetInDom.empty().html('');
         targetNotDom.empty().html('');
 
+        function matchNot() {
+            return registerManager.not.filter(function(notFilter) {
+                var regex = new RegExp(searchNotValue, 'ig');
+                return searchNotValue.length === 0 || notFilter.name.match(regex) || (notFilter.prevLevel && notFilter.prevLevel.match(regex));
+            });
+        }
+
+        function matchIn() {
+            return registerManager.inList.filter(function(notFilter) {
+                var regex = new RegExp(searchInValue, 'ig');
+                return searchInValue.length === 0 || notFilter.name.match(regex);
+            });
+        }
+
         function updateLeftButton() {
             var moveSelectLeftDom = $('#move-selected-left');
-            var selected = registerManager.inList.filter(function(notFilter) {
+            var selected = matchIn().filter(function(notFilter) {
                 return notFilter.checked;
             });
             if (selected.length) {
@@ -121,7 +131,7 @@
 
         function updateRightButton() {
             var moveSelectRightDom = $('#move-selected-right');
-            var selected = registerManager.not.filter(function(notFilter) {
+            var selected = matchNot().filter(function(notFilter) {
                 return notFilter.checked;
             });
             if (selected.length) {
@@ -130,9 +140,17 @@
                 moveSelectRightDom.addClass('disabled');
             }
         }
+
         updateLeftButton();
         updateRightButton();
         $.each(registerManager.inList, function(index, inList) {
+            if (searchInValue.length) {
+                var regex = new RegExp(searchInValue, 'ig');
+                var match = inList.name.match(regex);
+                if (!match) {
+                    return true;
+                }
+            }
             var checkDom = $('<input>')
                 .attr('type', 'checkbox')
                 .prop('checked', inList.checked)
@@ -141,6 +159,16 @@
                     var self = $(this);
                     registerManager.inList[self.data('index')].checked = self.is(':checked');
                     updateLeftButton();
+                });
+
+            var amountInputDom = $('<input>')
+                .addClass('form-control')
+                .prop('required', true)
+                .data('index', index)
+                .val(inList.amount ? inList.amount : '')
+                .on('input', function() {
+                    var self = $(this);
+                    registerManager.inList[self.data('index')].amount = self.val();
                 });
 
             var formationSelectDom = $('<select>')
@@ -152,9 +180,17 @@
                 });
 
             var levelSelectDom = $('<select>')
+                .append(
+                    phpLevels.map(function(phpLevelMap) {
+                        return $('<option>')
+                            .attr('value', phpLevelMap.label)
+                            .text(phpLevelMap.label);
+                    })
+                )
                 .addClass('custom-select')
                 .prop('required', true)
                 .data('index', index)
+                .val(inList.level)
                 .on('change', function() {
                     var self = $(this);
                     registerManager.inList[self.data('index')].level = self.val();
@@ -163,6 +199,20 @@
             var formFooterDom = $('<div>')
                 .addClass('card-footer')
                 .append(
+                    $('<div>')
+                    .addClass('form-group')
+                    .append(
+                        $('<label>')
+                        .text('Montant'),
+                        $('<div>')
+                        .addClass('input-group')
+                        .append(
+                            amountInputDom,
+                            $('<div>')
+                            .addClass('input-group-append')
+                            .html('<span class="btn btn-default disabled">Ar</span>')
+                        )
+                    ),
                     $('<div>')
                     .addClass('form-group')
                     .append(
@@ -190,66 +240,34 @@
                             recherche: params.term, // terme de recherche saisi par l'utilisateur
                             _token: $('[name=_token]').val(),
                             student_id: inList.id,
-                            formation: true,
-                            page: params.page || 1
+                            exclude: formationSelectDom.val(),
+                            formation: true
                         };
                     },
-                    processResults: function(data, params) {
-                        params.page = params.page || 1;
+                    processResults: function(data) {
+                        console.log(data);
                         return {
-                            results: data.items, // Les éléments à afficher dans le menu déroulant
-                            pagination: {
-                                more: (params.page * 10) < data.total_count // booléen pour plus de pages
-                            }
-                        };
-                    },
-                    cache: true
-                },
-                minimumInputLength: 1,
-            });
-
-            levelSelectDom.select2({
-                theme: 'bootstrap4',
-                tags: true,
-                multiple: true,
-                tokenSeparators: ['.'],
-                minimumInputLength: 1,
-                maximumSelectionLength: 1,
-                createTag: function(params) {
-                    // Cette fonction est appelée lorsque l'utilisateur saisit une valeur
-                    var term = $.trim(params.term);
-                    if (levelSelectDom.select2('data').length >= 1 || term === '') {
-                        return null;
-                    }
-                    return {
-                        id: term, // Utilisez la valeur saisie comme ID
-                        text: term, // Utilisez la valeur saisie comme texte
-                        newTag: true // Indique qu'il s'agit d'une nouvelle valeur
-                    };
-                },
-                ajax: {
-                    url: registrationInfoRoute, // URL de la source de données
-                    method: 'post',
-                    dataType: 'json', // Type de données attendu en réponse
-                    delay: 500, // Délai avant l'envoi de la requête après la saisie
-                    data: function(params) {
-                        return { // Paramètres envoyés avec la requête
-                            recherche: params.term, // terme de recherche saisi par l'utilisateur
-                            _token: $('[name=_token]').val(),
-                            page: params.page || 1
-                        };
-                    },
-                    processResults: function(data, params) {
-                        params.page = params.page || 1;
-                        return {
-                            results: data.items, // Les éléments à afficher dans le menu déroulant
-                            pagination: {
-                                more: (params.page * 10) < data.total_count // booléen pour plus de pages
-                            }
+                            results: data.map(function(mapData) {
+                                return {
+                                    id: mapData.id,
+                                    text: mapData.name,
+                                    amount: mapData.price
+                                }
+                            }), // Les éléments à afficher dans le menu déroulant
                         };
                     },
                     cache: true
                 }
+            }).on('select2:select', function(event) {
+                var self = $(this);
+                var data = event.params.data;
+                var old = parseInt(amountInputDom.val() ? amountInputDom.val() : 0, 10);
+                amountInputDom.val(old + parseInt(data.amount, 10)).trigger('input');
+            }).on('select2:unselect', function(event) {
+                var self = $(this);
+                var data = event.params.data;
+                var old = parseInt(amountInputDom.val() ? amountInputDom.val() : 0, 10);
+                amountInputDom.val(old - parseInt(data.amount, 10)).trigger('input');
             });
 
             var addFormationDom = $('<button>')
@@ -296,6 +314,13 @@
         });
 
         $.each(registerManager.not, function(index, not) {
+            if (searchNotValue.length) {
+                var regex = new RegExp(searchNotValue, 'ig');
+                var match = not.name.match(regex) || (not.prevLevel && not.prevLevel.match(regex))
+                if (!match) {
+                    return true;
+                }
+            }
             var checkDom = $('<input>')
                 .attr('type', 'checkbox')
                 .prop('checked', not.checked)
@@ -327,6 +352,7 @@
             );
         })
     }
+
     var resetForm = function() {
         $('#session-modal-form').find('[name]').filter(function() {
             return $(this).attr('name') !== '_token';
@@ -361,14 +387,15 @@
                 _token: $('[name=_token]').val(),
                 label: $('[name=label]').val(),
                 place: $('[name=place]').val(),
-                start_date: moment($('[name=start_date]').val(), 'DD-MM-YYYY').format(),
-                end_date: moment($('[name=end_date]').val(), 'DD-MM-YYYY').format(),
+                start_date: $('[name=start_date]').val() ? moment($('[name=start_date]').val(), 'DD-MM-YYYY').format() : null,
+                end_date: $('[name=end_date]').val() ? moment($('[name=end_date]').val(), 'DD-MM-YYYY').format() : null,
                 students: []
             }
-            $(registerManager.inList, function(_, inList) {
+            $.each(registerManager.inList, function(_, inList) {
                 data.students.push({
                     id: inList.id,
                     formations: inList.formations,
+                    amount: inList.amount,
                     level: inList.level
                 })
             });
@@ -422,6 +449,15 @@
             });
             buildRegisterManager();
             self.addClass('disabled');
+        });
+        var searchNotTimeout, searchInTimeout;
+        $('#search-not').on('input', function() {
+            clearTimeout(searchNotTimeout);
+            searchNotTimeout = setTimeout(buildRegisterManager, 500);
+        });
+        $('#search-in').on('input', function() {
+            clearTimeout(searchInTimeout);
+            searchInTimeout = setTimeout(buildRegisterManager, 500);
         });
     })
 </script>

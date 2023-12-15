@@ -79,7 +79,10 @@
             <button type="button" class="btn bg-gradient-dark" data-toggle="modal" data-target="#session-modal-form">
                 Nouvelle entrée
             </button>
-            @include('partials.forms.session-form', ['students' => $students])
+            @include('partials.forms.session-form', [
+                'students' => $students,
+                'levels' => $levels
+                ])
         </div>
     </div>
     <div class="card-body p-0">
