@@ -1,16 +1,23 @@
 <?php
 
-    namespace App\Models;
+namespace App\Models;
 
-    use Illuminate\Database\Eloquent\Factories\HasFactory;
-    use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
-    class PaymentHistory extends Model {
-        use HasFactory;
+class PaymentHistory extends Model {
+    use HasFactory;
+    // Fillable properties
+    protected $fillable = ['amount', 'operation_date'];
 
-        protected $table = 'payment_histories';
+    // Casts - Complet
+    protected $casts = [
+        'amount' => 'integer',         // Cast en tant que integer
+        'operation_date' => 'datetime', // Cast en tant que datetime
+    ];
 
-        public function register() {
-            return $this->belongsTo(Register::class);
-        }
+    // Relations
+    public function registration() {
+        return $this->belongsTo(Registration::class); // Si chaque historique de paiement est lié à une inscription spécifique
     }
+}

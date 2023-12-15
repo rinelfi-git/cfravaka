@@ -1,20 +1,31 @@
 <?php
 
-    namespace App\Models;
+namespace App\Models;
 
-    use Illuminate\Database\Eloquent\Factories\HasFactory;
-    use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
-    class Teacher extends Model {
-        use HasFactory;
+class Teacher extends Model {
+    use HasFactory;
+    // Fillable properties
+    protected $fillable = ['name', 'address', 'id_number', 'phone', 'email'];
 
-        protected $table = 'teachers';
+    // Casts - Complet
+    protected $casts = [
+        'name'      => 'string',  // Cast en tant que string
+        'address'   => 'string',  // Cast en tant que string
+        'id_number' => 'string',  // Cast en tant que string
+        'phone'     => 'string',  // Cast en tant que string
+        'email'     => 'string',  // Cast en tant que string
+    ];
 
-        public function sessionGroups() {
-            return $this->hasMany(SessionGroup::class);
-        }
-
-        public function appeals() {
-            return $this->hasMany(Appeal::class);
-        }
+    // Relations
+    public function groupSessions() {
+        return $this->hasMany(GroupSession::class); // Assurez-vous que Session existe et est correctement défini
     }
+
+    // Si RollCall est une autre entité
+    public function rollCalls() {
+        return $this->hasMany(RollCall::class); // Assurez-vous que RollCall existe et est correctement défini
+    }
+}

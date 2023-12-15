@@ -1,24 +1,27 @@
 <?php
 
-	namespace App\Models;
+namespace App\Models;
 
-	use Illuminate\Database\Eloquent\Factories\HasFactory;
-	use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
-	class Partner extends Model {
-		use HasFactory;
+class Partner extends Model {
+    use HasFactory;
+    // Fillable properties
+    protected $fillable = ['name', 'owner'];
 
-		protected $table = 'partners';
-		protected $fillable = [
-			'name',
-			'owner'
-		];
+    // Casts - Complet
+    protected $casts = [
+        'name' => 'string',  // Cast en tant que string
+        'owner' => 'string', // Cast en tant que string
+    ];
 
-		public function students() {
-			return $this->hasMany(Student::class);
-		}
+    // Relations
+    public function students() {
+        return $this->belongsToMany(Student::class, 'partner_students'); // Si les partenaires sont liés aux étudiants
+    }
 
-		public function formationType() {
-			return $this->belongsTo(FormationType::class);
-		}
-	}
+    public function training() {
+        return $this->belongsTo(Training::class); // Si un partenaire propose plusieurs formations
+    }
+}

@@ -7,11 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class Level extends Model {
     use HasFactory;
-    protected $fillable = [
-        'label'
-    ];
+    // Fillable properties
+    protected $fillable = ['name'];
 
-    public function registers() {
-        return $this->hasMany(Register::class);
+    // Relations
+    public function students() {
+        return $this->hasMany(Student::class); // Si chaque niveau est associé à plusieurs étudiants
+    }
+
+    public function registrations() {
+        return $this->hasMany(Registration::class); // Si les inscriptions sont liées à des niveaux spécifiques
     }
 }

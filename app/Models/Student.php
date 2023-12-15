@@ -7,34 +7,35 @@ use Illuminate\Database\Eloquent\Model;
 
 class Student extends Model {
     use HasFactory;
+    // Fillable properties
+    protected $fillable = ['name', 'email', 'phone', 'test_date'];
 
-    protected $table = 'students';
-
-    protected $fillable = [
-        'name',
-        'email',
-        'phone',
-        'test_date',
-        'test_result'
-    ];
-
+    // Casts - Complet
     protected $casts = [
-        'test_date' => 'datetime:Y-m-d\TH:i:sP',
+        'name' => 'string',       // Cast en tant que string
+        'email' => 'string',      // Cast en tant que string
+        'phone' => 'string',      // Cast en tant que string
+        'test_date' => 'date',    // Cast en tant que date
     ];
 
-    public function partner() {
-        return $this->belongsTo(Partner::class);
-    }
-
-    public function appeals() {
-        return $this->hasMany(Appeal::class);
-    }
-
+    // Relations
     public function sessions() {
-        return $this->belongsToMany(Session::class);
+        return $this->belongsToMany(Session::class, 'registrations'); // Si vous avez une table pivot 'registrations' pour les sessions inscrites
     }
 
-    public function registers() {
-        return $this->hasMany(Register::class);
+    public function rollCalls() {
+        return $this->hasMany(RollCall::class); // Si les étudiants sont liés aux appels de présence
+    }
+
+    public function level() {
+        return $this->belongsTo(Level::class); // Si les étudiants sont associés à un niveau
+    }
+
+    public function partners() {
+        return $this->belongsToMany(Partner::class, 'partner_students'); // Si les étudiants sont associés à des partenaires
+    }
+
+    public function groupSessions() {
+        return $this->belongsToMany(GroupSession::class, 'group_session_students');
     }
 }

@@ -1,29 +1,22 @@
 <?php
-	
+
 	namespace App\Http\Controllers;
-	
+
 	use App\Http\Requests\LoginRequest;
 	use App\Models\User;
 	use Illuminate\Http\Request;
 	use Illuminate\Support\Facades\Auth;
 	use Illuminate\Support\Facades\Hash;
-	
+
 	class AuthenticationController extends Controller {
 		public function loginView() {
-//			$user = new User([
-//				'username' => 'rinefli',
-//				'name'     => 'Rijaniaina Elie Fidèle',
-//				'email'    => 'elierijaniaina@gmail.com',
-//				'password' => Hash::make("c'est facile")
-//			]);
-//			$user->save();
 			return view('authentications.login');
 		}
-		
+
 		public function lockView() {
 			return 'locked';
 		}
-		
+
 		public function loginRequest(LoginRequest $request) {
 			$credentials = $request->validated();
 			$dbUser = new User();
@@ -44,7 +37,7 @@
 			}
 			return $errorMessage;
 		}
-		
+
 		public function logoutRequest() {
 			Auth::logout();
 			return redirect()->route('login');

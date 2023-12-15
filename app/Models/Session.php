@@ -1,27 +1,29 @@
 <?php
 
-    namespace App\Models;
+namespace App\Models;
 
-    use Illuminate\Database\Eloquent\Factories\HasFactory;
-    use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
-    class Session extends Model {
-        use HasFactory;
+class Session extends Model {
+    use HasFactory;
+    // Fillable properties
+    protected $fillable = ['label', 'start_date', 'end_date', 'available_place'];
 
-        protected $table = 'sessions';
+    // Casts - Complet
+    protected $casts = [
+        'label' => 'string',            // Cast en tant que string
+        'start_date' => 'date',         // Cast en tant que date
+        'end_date' => 'date',           // Cast en tant que date
+        'available_place' => 'integer', // Cast en tant que integer
+    ];
 
-        protected $fillable = [
-            'label',
-            'start_date',
-            'end_date',
-            'place',
-        ];
-
-        public function groups() {
-            return $this->belongsToMany(Group::class);
-        }
-
-        public function students() {
-            return $this->belongsToMany(Student::class);
-        }
+    // Relations
+    public function groups() {
+        return $this->belongsToMany(Group::class, 'group_sessions'); // Assurez-vous que Group existe et est correctement défini
     }
+
+    public function students() {
+        return $this->belongsToMany(Student::class, 'registrations'); // Si vous avez une table pivot 'registrations' pour les étudiants inscrits
+    }
+}
