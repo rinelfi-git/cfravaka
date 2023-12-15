@@ -12,8 +12,8 @@ class AddForeignKeysToRegistrationsTable extends Migration {
      */
     public function up() {
         Schema::table('registrations', function (Blueprint $table) {
-            $table->foreignId('session_id')->constrained('sessions');
-            $table->foreignId('student_id')->constrained('students');
+            $table->foreignId('session_id')->constrained('sessions')->nullOnDelete();
+            $table->foreignId('student_id')->constrained('students')->nullOnDelete();
         });
     }
 

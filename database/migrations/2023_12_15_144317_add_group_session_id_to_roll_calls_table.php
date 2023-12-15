@@ -12,7 +12,7 @@ class AddGroupSessionIdToRollCallsTable extends Migration {
      */
     public function up() {
         Schema::table('roll_calls', function (Blueprint $table) {
-            $table->foreignId('group_session_id')->constrained('group_sessions');
+            $table->foreignId('group_session_id')->constrained('group_sessions')->nullOnDelete();
         });
     }
 

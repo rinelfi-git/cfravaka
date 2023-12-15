@@ -13,8 +13,8 @@ class CreatePartnerStudentsTable extends Migration {
     public function up() {
         Schema::create('partner_students', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('student_id')->constrained('students');
-            $table->foreignId('partner_id')->constrained('partners');
+            $table->foreignId('student_id')->constrained('students')->cascadeOnDelete();
+            $table->foreignId('partner_id')->constrained('partners')->cascadeOnDelete();
             // Ajoutez d'autres colonnes si nécessaire
             $table->timestamps();
         });

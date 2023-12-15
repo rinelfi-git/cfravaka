@@ -14,7 +14,7 @@ class AddGroupSessionIdToTimeRangesTable extends Migration
     public function up()
     {
         Schema::table('time_ranges', function (Blueprint $table) {
-            $table->foreignId('group_session_id')->constrained('group_sessions');
+            $table->foreignId('group_session_id')->constrained('group_sessions')->cascadeOnDelete();
         });
     }
 

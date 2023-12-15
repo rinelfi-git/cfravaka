@@ -15,7 +15,7 @@ class Student extends Model {
         'name' => 'string',       // Cast en tant que string
         'email' => 'string',      // Cast en tant que string
         'phone' => 'string',      // Cast en tant que string
-        'test_date' => 'date',    // Cast en tant que date
+        'test_date' => 'date:Y-m-d',    // Cast en tant que date
     ];
 
     // Relations

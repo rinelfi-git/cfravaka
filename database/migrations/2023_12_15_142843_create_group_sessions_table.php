@@ -13,8 +13,8 @@ class CreateGroupSessionsTable extends Migration {
     public function up() {
         Schema::create('group_sessions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('group_id')->constrained('groups')->nullOnDelete();
-            $table->foreignId('session_id')->constrained('sessions')->nullOnDelete();
+            $table->foreignId('group_id')->constrained('groups')->nullOnDelete()->cascadeOnDelete();
+            $table->foreignId('session_id')->constrained('sessions')->nullOnDelete()->cascadeOnDelete();
             // Ajoutez d'autres colonnes si nécessaire
             $table->timestamps();
         });

@@ -15,8 +15,8 @@ class CreateTrainingTypeRegistrationsTable extends Migration
     {
         Schema::create('training_type_registrations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('training_type_id')->constrained('training_types');
-            $table->foreignId('registration_id')->constrained('registrations');
+            $table->foreignId('training_type_id')->constrained('training_types')->cascadeOnDelete();
+            $table->foreignId('registration_id')->constrained('registrations')->cascadeOnDelete();
             // Ajoutez d'autres colonnes si nécessaire
             $table->timestamps();
         });

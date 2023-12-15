@@ -12,7 +12,7 @@ class AddTeacherIdToRollCallsTable extends Migration {
      */
     public function up() {
         Schema::table('roll_calls', function (Blueprint $table) {
-            $table->foreignId('teacher_id')->constrained('teachers');
+            $table->foreignId('teacher_id')->constrained('teachers')->nullOnDelete();
         });
     }
 

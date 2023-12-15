@@ -8,8 +8,8 @@
                 Nouvelle entrée
             </button>
             @include('partials.forms.student-form', [
-            'partners' => $partners,
-            'levels' => $levels
+                'partners' => $partners,
+                'levels' => $levels
             ])
         </div>
     </div>
@@ -57,7 +57,11 @@
                 success: function(response) {
                     $.each(response, function(key, value) {
                         var inputDom = $('#student-modal-form [name="' + key + '"]');
-                        inputDom.val(value);
+                        if(key === 'test_date') {
+                            inputDom.val(value ? moment(value).format('DD-MM-YYYY') : '');
+                        } else {
+                            inputDom.val(value);
+                        }
                         inputDom.trigger('change');
                     });
                     $('#student-modal-form [name]').prop('disabled', false);
