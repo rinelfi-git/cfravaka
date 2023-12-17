@@ -50,8 +50,6 @@
                     multiple: true,
                     width: '100%'
                 }).val([]);
-            } else if (self.attr('value')) {
-                self.val(self.attr('value'))
             } else {
                 self.val('')
             }
@@ -62,6 +60,7 @@
         var itsModalDom = $('#partner-modal-form');
         var formDom = itsModalDom.find('form');
         itsModalDom.on('show.bs.modal', function() {
+            resetForm();
             $(this).find('[name="students"]').select2({
                 theme: 'bootstrap4',
                 multiple: true

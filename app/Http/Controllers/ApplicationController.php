@@ -2,8 +2,8 @@
 	
 	namespace App\Http\Controllers;
 	
-	use App\Http\Requests\FormationTypeRequest;
-	use App\Http\Requests\PartnerRequest;
+	use App\Http\Requests\SaveFormationTypeRequest;
+	use App\Http\Requests\SavePartnerRequest;
 	use App\Http\Requests\SaveStudentRequest;
 	use App\Http\Requests\SessionRequest;
 	use App\Models\FormationSubCategory;
@@ -14,6 +14,7 @@
 	use App\Models\Session;
 	use App\Models\Student;
 	use App\Models\Training;
+	use App\Models\TrainingType;
 	use App\Models\User;
 	use Illuminate\Http\Request;
 	use Yajra\DataTables\DataTables;
@@ -31,9 +32,11 @@
 		}
 		
 		public function studentTableList() {
-			$students = Student::with(['level' => function($query) {
-				$query->select(['id', 'label']);
-			}])->get(['id', 'name', 'email', 'phone', 'test_date', 'level_id']);
+			$students = Student::with([
+				'level' => function ($query) {
+					$query->select(['id', 'label']);
+				}
+			])->get(['id', 'name', 'email', 'phone', 'test_date', 'level_id']);
 			return DataTables::of($students)
 			                 ->addColumn('test_date', function ($student) {
 				                 setlocale(LC_TIME, 'fr_FR');
@@ -45,11 +48,11 @@
 			                 })
 			                 ->addColumn('action', function ($student) {
 				                 return '
-					<div class="btn-group">
-                        <button type="button" class="btn bg-gradient-primary open-update-modal" data-route="' . route('app.list.students.get') . '" data-id="' . $student->id . '">
-                            <i class="fas fa-pen"></i>
-                        </button>
-                     </div>';
+									<div class="btn-group">
+				                        <button type="button" class="btn bg-gradient-primary open-update-modal" data-route="' . route('app.list.students.get') . '" data-id="' . $student->id . '">
+				                            <i class="fas fa-pen"></i>
+				                        </button>
+				                     </div>';
 			                 })->make(true);
 		}
 		
@@ -103,20 +106,19 @@
 		}
 		
 		public function partnerGet(Request $request) {
-			$partner = Partner::find($request->input('id'));
-			$students = Student::select(['id'])->where(['partner_id' => $partner->id])->get();
+			$partner = Partner::with('students')->find($request->input('id'));
 			$output = [
 				'id'       => $partner->id,
 				'name'     => $partner->name,
 				'owner'    => $partner->owner,
-				'students' => array_map(function ($student) {
-					return $student['id'];
-				}, $students->toArray()),
+				'students' => $partner->students->map(function ($student) {
+					return $student->id;
+				})->toArray()
 			];
 			return $output;
 		}
 		
-		public function partnersForm(PartnerRequest $request) {
+		public function partnersForm(SavePartnerRequest $request) {
 			$validated = $request->validated();
 			$validated['students'] = $validated['students'] ?? [];
 			if (empty($validated['id'])) {
@@ -139,24 +141,44 @@
 		}
 		
 		public function formationTableList(Request $request) {
-			$formationTypes = FormationType::select(['id', 'name']);
-			return DataTables::of($formationTypes)
-			                 ->addColumn('subcategories', function (FormationType $formationType) {
-				                 $subcategories = $formationType->formationSubCategories->toArray();
-				                 return implode('', array_map(function ($subcategory) {
+			$trainings = Training::with([
+				'trainingTypes' => function ($query) {
+					$query->select([
+						'id',
+						'modality',
+						'formula',
+						'convenience',
+						'price',
+						'hourly_volume',
+						'is_monthly',
+						'training_id'
+					]);
+				},
+				'partner'       => function ($query) {
+					$query->select([
+						'id',
+						'name',
+						'training_id'
+					]);
+				}
+			])->select(['id', 'name']);
+			
+			return DataTables::of($trainings)
+			                 ->addColumn('subcategories', function (Training $training) {
+				                 $trainingTypes = $training->trainingTypes->toArray();
+				                 return implode('', array_map(function ($trainingType) {
 					                 return view('partials.formation-subcategory', [
-						                 'modality'    => $subcategory['modality'],
-						                 'formula'     => $subcategory['formula'],
-						                 'convenience' => $subcategory['convenience'],
-						                 'timeRange'   => $subcategory['time_range'],
-						                 'price'       => $subcategory['price'],
-						                 'isMonthly'   => $subcategory['is_monthly'] ? 'Payment mensuel' : 'Payment par session',
-						                 'isEditable'  => $subcategory['is_editable'] ? 'Tarif modifiable' : 'Tarif fixe'
+						                 'modality'    => $trainingType['modality'],
+						                 'formula'     => $trainingType['formula'],
+						                 'convenience' => $trainingType['convenience'],
+						                 'timeRange'   => $trainingType['hourly_volume'],
+						                 'price'       => $trainingType['price'],
+						                 'isMonthly'   => $trainingType['is_monthly'] ? 'Payment mensuel' : 'Payment par session'
 					                 ])->render();
-				                 }, $subcategories));
+				                 }, $trainingTypes));
 			                 })
-			                 ->addColumn('availability', function (FormationType $formationType) {
-				                 $partner = $formationType->partner;
+			                 ->addColumn('availability', function (Training $training) {
+				                 $partner = $training->partner;
 				                 return !empty($partner) ? $partner->name : 'Tout le monde';
 			                 })
 			                 ->addColumn('action', function ($formationType) {
@@ -168,76 +190,79 @@
 		}
 		
 		public function formationGet(Request $request) {
-			$formation = FormationType::find($request->input('id'));
-			$output = $formation->toArray();
-			$output['subcategories'] = $formation->formationSubCategories;
-			$output['partner_id'] = !empty($formation->partner) ? $formation->partner->id : null;
+			$training = Training::find($request->input('id'));
+			$output = $training->toArray();
+			$output['subcategories'] = $training->trainingTypes;
+			$output['partner_id'] = !empty($training->partner) ? $training->partner->id : null;
 			return response()->json($output);
 		}
 		
 		public function formationDuplicate(int $id) {
-			$formation = FormationType::find($id);
-			$subCategories = $formation->formationSubCategories;
-			$formationClone = $formation->replicate();
-			$formationClone->name .= ' - copie';
-			$formationClone->save();
-			foreach ($subCategories as $subCategory) {
-				$subCategoryClone = $subCategory->replicate();
-				$formationClone->formationSubCategories()->save($subCategoryClone);
+			$training = Training::with([
+				'trainingTypes' => function($query) {
+				
+				}
+			])->find($id);
+			$trainingTypes = $training->trainingTypes;
+			$trainingClone = $training->replicate();
+			$trainingClone->name .= ' - copie';
+			$trainingClone->save();
+			foreach ($trainingTypes as $trainingType) {
+				$trainingTypeClone = $trainingType->replicate();
+				$trainingClone->trainingTypes()->save($trainingTypeClone);
 			}
-			return response()->json($formationClone);
+			return response()->json($trainingClone);
 		}
 		
-		public function formationsForm(FormationTypeRequest $request) {
+		public function formationsForm(SaveFormationTypeRequest $request) {
 			$validated = $request->validated();
 			if (empty($validated['id'])) {
-				$formationType = FormationType::create($validated);
-				$output = $formationType->toArray();
+				$training = new Training($validated);
+				$training->save();
+				$output = $training->toArray();
 				foreach ($validated['subcategories'] as $subcategory) {
-					$subcategory = new FormationSubCategory($subcategory);
-					$output['subcategories'] = $formationType->formationSubCategories()->save($subcategory)->toArray();
+					$subcategory = new TrainingType($subcategory);
+					$output['subcategories'] = $training->trainingTypes()->save($subcategory)->toArray();
 				}
 				if (!empty($validated['partner_id'])) {
 					$partner = Partner::find($validated['partner_id']);
-					$output['partner'] = $formationType->partner()->save($partner)->toArray();
+					$output['partner'] = $training->partner()->save($partner)->toArray();
 				}
 			} else {
-				$formationType = FormationType::find($validated['id']);
-				$formationType->update($validated);
-				$subCategories = $formationType->formationSubCategories()->select('id')->pluck('id');
-				
-				$deleteSubCategories = array_map(function ($subCategory) {
-					return intval($subCategory['id']);
-				}, $validated['subcategories']);
-				$deleteSubCategories = array_filter($subCategories->toArray(), function ($subCategory) use ($deleteSubCategories) {
-					return !in_array($subCategory, $deleteSubCategories);
-				});
-				FormationSubCategory::whereIn('id', $deleteSubCategories)->delete();
-				$newSubCategories = array_filter($validated['subcategories'], function ($subCategory) {
-					return empty($subCategory['id']);
-				});
-				$oldSubCategories = array_filter($validated['subcategories'], function ($subCategory) {
+				$training = Training::with('trainingTypes')->find($validated['id']);
+				$training->update($validated);
+				$output = $training->toArray();
+				$validatedSubCategories = $validated['subcategories'];
+				$oldSubCategories = array_filter($validatedSubCategories, function($subCategory) {
 					return !empty($subCategory['id']);
 				});
-				$output = $formationType->toArray();
+				$newSubCategories = array_filter($validatedSubCategories, function($subCategory) {
+					return empty($subCategory['id']);
+				});
+				$oldSubCategoriyIds = array_map(function($trainingType){
+					return $trainingType['id'];
+				}, $oldSubCategories);
+				
+				$training->trainingTypes()->whereNotIn('id', $oldSubCategoriyIds)->delete();
+				
 				$output['subcategories'] = [];
-				foreach ($newSubCategories as $subcategory) {
-					$subcategory = new FormationSubCategory($subcategory);
-					$formationType->formationSubCategories()->save($subcategory);
-					$output['subcategories'][] = $subcategory->toArray();
+				foreach ($newSubCategories as $trainingType) {
+					$trainingType = new TrainingType($trainingType);
+					$training->trainingTypes()->save($trainingType);
+					$output['subcategories'][] = $trainingType->toArray();
 				}
 				foreach ($oldSubCategories as $subcategory) {
-					$subCategory = FormationSubCategory::find($subcategory['id']);
-					$subCategory->update($subcategory);
-					$output['subcategories'][] = $subCategory->toArray();
+					$trainingType = TrainingType::find($subcategory['id']);
+					$trainingType->update($subcategory);
+					$output['subcategories'][] = $trainingType->toArray();
 				}
-				$partner = $formationType->partner;
+				$partner = $training->partner;
 				if (!empty($partner) && empty($validated['partner_id'])) {
-					$partner->update(['formation_type_id' => null]);
+					$training->partner()->update(['training_id' => null]);
 				}
 				if (!empty($validated['partner_id']) && (empty($partner) || $partner->id !== $validated['partner_id'])) {
 					$partner = Partner::find($validated['partner_id']);
-					$formationType->partner()->save($partner);
+					$training->partner()->save($partner);
 				}
 				$output['partner_id'] = !empty($partner) ? $partner->id : null;
 			}
