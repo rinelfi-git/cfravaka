@@ -84,6 +84,9 @@
 			if (!empty($validated['level'])) {
 				$student->level()->associate(Level::find($validated['level']));
 				$student->save();
+			} elseif(!empty($student->level)) {
+				$student->level()->dissociate($student->level);
+				$student->save();
 			}
 			return $student;
 		}
@@ -271,14 +274,14 @@
 		
 		// session
 		public function sessionsView() {
-			$query = Student::with([
-				'registers' => function ($query) {
+			$studentsQuery = Student::with([
+				'sessions' => function ($query) {
 					// Sélectionnez la dernière inscription basée sur la date ou un autre critère
 					$query->latest()->first();
 				}
 			])->get()->map(function ($student) {
 				// Vérifiez si l'étudiant a des inscriptions
-				if ($student->registers->isNotEmpty()) {
+				if ($student->sessions->isNotEmpty()) {
 					// Récupérez le niveau de la dernière inscription
 					$level = $student->registers->first()->level->label ?? null;
 				} else {
@@ -292,7 +295,7 @@
 					'level' => $level,
 				];
 			});
-			return view('applications.sessions', ['students' => $query->toArray(), 'levels' => Level::select(['label'])->get()]);
+			return view('applications.sessions', ['students' => $studentsQuery->toArray(), 'levels' => Level::select(['label'])->get()]);
 		}
 		
 		public function sessionTableList(Request $request) {
@@ -300,18 +303,22 @@
 		
 		public function studentRegistrationDataRequest(Request $request) {
 			if ($request->get('formation') !== null) {
-				$raw = FormationType::get();
-				return $raw->filter(function ($formationType) use ($request) {
-					$isMatchSearch = empty($request->input('recherche')) || \str_contains(strtolower($formationType->name), strtolower($request->input('recherche')));
-					$partner = $formationType->partner;
-					$userCanUse = $partner === null || $partner->students()->where('id', $request->input('student_id'))->exists();
-					return $isMatchSearch && $userCanUse;
-				})->flatMap(function ($formationType) use ($request) {
-					return $formationType->formationSubCategories()
-					                     ->whereNotIn('id', $request->input('exclude') ?? [])
-					                     ->get()
-					                     ->map(function ($subCategory) use ($formationType) {
-						                     $constructName = $formationType->name . " (";
+				$raw = Training::doesntHave('partner');
+				$search = $request->input('recherche');
+				$excludes = $request->input('exclude') ?? [];
+				if(!empty($search)) {
+					$raw->where('name', 'like', "'%{$search}%'");
+				}
+				if(!empty($excludes)) {
+					$raw->with(['trainingTypes' => function($query) use($excludes) {
+						$query->whereNotIn('id', $excludes);
+					}]);
+				} else {
+					$raw->with('trainingTypes');
+				}
+				return $raw->get()->flatMap(function ($training) use ($request) {
+					return $training->trainingTypes->map(function ($subCategory) use ($training) {
+						                     $constructName = $training->name . " (";
 						                     switch ($subCategory->modality) {
 							                     case 'En ligne':
 								                     $constructName .= "On|";
@@ -336,7 +343,7 @@
 								                     $constructName .= "Gr|";
 								                     break;
 						                     }
-						                     $constructName .= $subCategory->time_range . ")";
+						                     $constructName .= $subCategory->hourly_volume . ")";
 						                     return [
 							                     'id'    => $subCategory->id,
 							                     'name'  => $constructName,
