@@ -29,6 +29,10 @@ class Student extends Model {
         });
     }
 
+    public function reigstrations() {
+        return $this->hasMany(Registration::class);
+    }
+
     public function latestRegistration() {
         return $this->hasOne(Registration::class)->latestOfMany();
     }
