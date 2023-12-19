@@ -51,4 +51,6 @@
 		Route::post('/session', 'sessionGet')->name('list.sessions.get');
 		Route::post('/session-registration-info', 'studentRegistrationDataRequest')->name('list.sessions.registration.info.get');
 		Route::post('/sessions', 'sessionsForm')->name('list.sessions.form');
+
+		Route::get('/sessions/manage-{id}', 'sessionGroupManage')->name('manage.group')->where('id', '[0-9]+');
 	});

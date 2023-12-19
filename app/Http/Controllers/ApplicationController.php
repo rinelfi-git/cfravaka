@@ -298,9 +298,12 @@ class ApplicationController extends Controller {
             ->addColumn('action', function ($session) {
                 return '
                 <div class="btn-group">
-                    <button type="button" class="btn bg-gradient-primary open-update-modal" data-route="' . route('app.list.sessions.get') . '" data-id="' . $session->id . '">
+                    <button type="button" class="btn btn-sm bg-gradient-primary open-update-modal" data-route="' . route('app.list.sessions.get') . '" data-id="' . $session->id . '">
                         <i class="fas fa-pen"></i>
                     </button>
+                    <a type="button" class="btn btn-sm bg-gradient-primary" href="' . route('app.manage.group', ['id' => $session->id]) . '">
+                        <i class="fas fa-users"></i>
+                    </a>
                 </div>';
             })->make(true);
     }
@@ -312,8 +315,8 @@ class ApplicationController extends Controller {
     public function sessionGet(Request $request) {
         $session = Session::find($request->input('id'));
         $output = $session->toArray();
-        $output['students'] = $session->registrations()->get()->map(function($registrationMap) {
-            $prevLevel = Registration::where(['student_id'=> $registrationMap->student_id])->select('level_id')->orderBy('id', 'desc')->skip(1)->first();
+        $output['students'] = $session->registrations()->get()->map(function ($registrationMap) {
+            $prevLevel = Registration::where(['student_id' => $registrationMap->student_id])->select('level_id')->orderBy('id', 'desc')->skip(1)->first();
             $student = Student::with('level')->where('id', $registrationMap->student_id)->get()->first();
             $prevLevel = !empty($prevLevel) && !empty($prevLevel->level) ? $prevLevel->level->id : (!empty($student->level) ? $student->level->id : null);
             return [
@@ -323,13 +326,10 @@ class ApplicationController extends Controller {
                 'operation_date' => $registrationMap->operation_date->format('d-m-Y'),
                 'trainingTypes' => $registrationMap->trainingTypes->pluck('id')->toArray(),
                 'level' => $registrationMap->level_id,
-                'prevLevel' =>$prevLevel
+                'prevLevel' => $prevLevel
             ];
         });
         return response()->json($output);
-    }
-
-    public function sessionDuplicate(int $id) {
     }
 
     public function sessionsForm(SessionRequest $request) {
@@ -362,7 +362,7 @@ class ApplicationController extends Controller {
             $registrationWhere = $student->sessions()->where('session_id', $session->id)->first()->pivot->toArray();
             $registration = Registration::where($registrationWhere)->get()->first();
             $registrationOldAmount = $registration->amount;
-            if($linkExists) {
+            if ($linkExists) {
                 $registration->update(['amount' => $studentAmount]);
             }
             $registration->trainingTypes()->detach();
@@ -383,5 +383,9 @@ class ApplicationController extends Controller {
             $output['registrations'][] = $outputRegistrations;
         }
         return $registration;
+    }
+
+    public function sessionGroupManage(int $id) {
+        return view('applications.group-manage');
     }
 }
