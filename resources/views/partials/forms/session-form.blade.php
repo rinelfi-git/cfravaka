@@ -105,7 +105,7 @@
         function matchNot() {
             return registerManager.not.filter(function(notFilter) {
                 var regex = new RegExp(searchNotValue, 'ig');
-                return searchNotValue.length === 0 || notFilter.name.match(regex) || (notFilter.prevLevel && notFilter.prevLevel.match(regex));
+                return searchNotValue.length === 0 || notFilter.name.match(regex) || (['number', 'string'].includes(typeof notFilter.prevLevel) && getStudentLevelLabel(parseInt(notFilter.prevLevel, 10)).match(regex));
             });
         }
 
@@ -297,7 +297,7 @@
         $.each(registerManager.not, function(index, not) {
             if (searchNotValue.length) {
                 var regex = new RegExp(searchNotValue, 'ig');
-                var match = not.name.match(regex) || (not.prevLevel && not.prevLevel.match(regex))
+                var match = not.name.match(regex) || (['number', 'string'].includes(typeof not.prevLevel) && getStudentLevelLabel(parseInt(not.prevLevel, 10)).match(regex))
                 if (!match) {
                     return true;
                 }
@@ -329,11 +329,7 @@
                         .text(not.name),
                         $('<div>')
                         .addClass('actions')
-                        .html('<strong>' + (not.prevLevel ? phpLevels.filter(function(filterLevel) {
-                            return filterLevel.id === parseInt(not.prevLevel, 10)
-                        }).map(function(mapLevel) {
-                            return mapLevel.label;
-                        }).join('') : '') + '</strong>')
+                        .html('<strong>' + (['number', 'string'].includes(typeof not.prevLevel) ? getStudentLevelLabel(parseInt(not.prevLevel)) : '') + '</strong>')
                     )
                 )
             );
