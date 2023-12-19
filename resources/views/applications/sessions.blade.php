@@ -1,8 +1,8 @@
 @extends('authed')
 @section('title', 'Session')
 @section('dynamic-style')
-
-<style>
+	
+	<style>
     .dual-list-session {
         display: flex;
         flex-direction: row;
@@ -24,7 +24,7 @@
         padding: 0 5px;
     }
 
-    .dual-list-actions>* {
+    .dual-list-actions > * {
         flex: 0 0 auto;
         width: auto;
         display: block;
@@ -38,7 +38,7 @@
         overflow-y: auto;
     }
 
-    .student-list>.card:last-child {
+    .student-list > .card:last-child {
         margin: 0;
     }
 
@@ -64,6 +64,7 @@
         flex: 1;
         font-weight: bold;
         padding: 5px 10px;
+        margin: 0;
     }
 
     .student-info .actions {
@@ -73,16 +74,17 @@
 </style>
 @endsection
 @section('wrapped-content')
-<div class="card">
+	<div class="card">
     <div class="card-header">
         <div class="card-tools">
             <button type="button" class="btn bg-gradient-dark" data-toggle="modal" data-target="#session-modal-form">
                 Nouvelle entrée
             </button>
-            @include('partials.forms.session-form', [
-                'students' => $students,
-                'levels' => $levels
-                ])
+	        @include('partials.forms.session-form', [
+				'students' => $students,
+				'levels' => $levels,
+				'trainingTypes' => $trainingTypes
+				])
         </div>
     </div>
     <div class="card-body p-0">
@@ -99,11 +101,12 @@
             <tbody>
                 <tr>
                     <td>
-                        <input type="text" class="form-control" placeholder="Libellé" autoComplete="off" />
+                        <input type="text" class="form-control" placeholder="Libellé" autoComplete="off"/>
                     </td>
-                    <td><input type="text" class="form-control" placeholder="Date de début" autoComplete="off" /></td>
-                    <td><input type="text" class="form-control" placeholder="Date de fin" autoComplete="off" /></td>
-                    <td><input type="text" class="form-control" placeholder="Nombre de places restantes" autoComplete="off" /></td>
+                    <td><input type="text" class="form-control" placeholder="Date de début" autoComplete="off"/></td>
+                    <td><input type="text" class="form-control" placeholder="Date de fin" autoComplete="off"/></td>
+                    <td><input type="text" class="form-control" placeholder="Nombre de places restantes"
+                               autoComplete="off"/></td>
                 </tr>
                 <tr>
                     <td>Session Janvier</td>
@@ -113,8 +116,8 @@
                     <td>
                         <div class="btn-group">
                             <button type="button" data-toggle={ 'modal' } data-target={ '#group-arrangement' } class="btn btn-sm bg-gradient-dark">Groupes
-                            </button>
-                            <button type="button" class="btn btn-sm bg-gradient-info">
+	                        </button>
+	                        <button type="button" class="btn btn-sm bg-gradient-info">
                                 <span class="fa fa-info"></span>
                             </button>
                         </div>
@@ -163,54 +166,55 @@
 </div>
 @endsection
 @section('dynamic-script')
-<script>
+	<script>
     var sessionDatatable;
-    function sessionDataTable(options) {
-        $('#student-datatable').on('click', '.open-update-modal', function() {
-            var self = $(this);
-            if (typeof resetForm === 'function') {
-                $('#student-modal-form [name]').prop('disabled', true);
-                resetForm.call();
-            }
-            $('#student-modal-form').modal('show');
-            $.ajax({
-                url: self.data('route'),
-                method: 'post',
-                type: 'json',
-                data: {
-                    id: self.data('id'),
-                    _token: options.token
-                },
-                success: function(response) {
-                    $.each(response, function(key, value) {
-                        var inputDom = $('#student-modal-form [name="' + key + '"]');
-                        inputDom.val(value);
-                        inputDom.trigger('change');
-                    });
-                    $('#student-modal-form [name]').prop('disabled', false);
-                }
-            });
-        });
-        return $('#student-datatable').DataTable({
-            responsive: true,
-            processing: true,
-            serverSide: true,
-            ajax: {
-                url: options.dataSource,
-                method: 'GET'
-            },
-            columns: [{
-                data: 'action',
-                orderable: false,
-                searchable: false
-            }]
-        });
+    
+    function sessionDataTable(options){
+	    $('#student-datatable').on('click', '.open-update-modal', function(){
+		    var self = $(this);
+		    if (typeof resetForm === 'function') {
+			    $('#student-modal-form [name]').prop('disabled', true);
+			    resetForm.call();
+		    }
+		    $('#student-modal-form').modal('show');
+		    $.ajax({
+			    url : self.data('route'),
+			    method : 'post',
+			    type : 'json',
+			    data : {
+				    id : self.data('id'),
+				    _token : options.token
+			    },
+			    success : function(response){
+				    $.each(response, function(key, value){
+					    var inputDom = $('#student-modal-form [name="' + key + '"]');
+					    inputDom.val(value);
+					    inputDom.trigger('change');
+				    });
+				    $('#student-modal-form [name]').prop('disabled', false);
+			    }
+		    });
+	    });
+	    return $('#student-datatable').DataTable({
+		    responsive : true,
+		    processing : true,
+		    serverSide : true,
+		    ajax : {
+			    url : options.dataSource,
+			    method : 'GET'
+		    },
+		    columns : [{
+			    data : 'action',
+			    orderable : false,
+			    searchable : false
+		    }]
+	    });
     }
-
-    $(function() {
-        sessionDatatable = sessionDataTable({
-            dataSource: "{{route('app.list.sessions.datatable')}}",
-            token: "{{session('_token')}}"
+    
+    $(function(){
+	    sessionDatatable = sessionDataTable({
+		    dataSource : "{{route('app.list.sessions.datatable')}}",
+		    token : "{{session('_token')}}"
         });
     })
 </script>

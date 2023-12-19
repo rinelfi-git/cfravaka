@@ -83,6 +83,7 @@
     var registrationInfoRoute = "{{route('app.list.sessions.registration.info.get')}}";
     var phpStudents = JSON.parse(JSON.stringify(<?= json_encode($students) ?>));
     var phpLevels = JSON.parse(JSON.stringify(<?= json_encode($levels) ?>));
+    var phpTrainingTypes = JSON.parse(JSON.stringify(<?= json_encode($trainingTypes) ?>));
     var registerManager = {
         not: [],
         inList: []
@@ -92,9 +93,15 @@
             checked: false,
             id: phpStudent.id,
             name: phpStudent.name,
-            prevLevel: phpStudent.level
+            prevLevel: phpStudent.level,
+            trainingTypes: []
         })
     });
+    var getStudentLevelLabel = function(id) {
+        return typeof id !== 'number' ? '' : phpLevels.find(function(findLevel) {
+            return findLevel.id === id;
+        }).label;
+    }
     var buildRegisterManager = function(options) {
         var targetNotDom = $('#register-not');
         var targetInDom = $('#register-in');
@@ -153,6 +160,7 @@
             }
             var checkDom = $('<input>')
                 .attr('type', 'checkbox')
+                .attr('id', 'check-in' + index)
                 .prop('checked', inList.checked)
                 .data('index', index)
                 .on('change', function() {
@@ -165,7 +173,7 @@
                 .addClass('form-control')
                 .prop('required', true)
                 .data('index', index)
-                .val(inList.amount ? inList.amount : '')
+                .val(inList.amount ? inList.amount : '0')
                 .on('input', function() {
                     var self = $(this);
                     registerManager.inList[self.data('index')].amount = self.val();
@@ -174,16 +182,20 @@
             var formationSelectDom = $('<select>')
                 .prop('required', true)
                 .data('index', index)
-                .on('change', function() {
-                    var self = $(this);
-                    registerManager.inList[self.data('index')].formations = self.val();
-                });
+                .append(
+                    phpTrainingTypes.map(function(mapPhpTrainingTypes) {
+                        return $('<option>')
+                            .attr('value', mapPhpTrainingTypes.id)
+                            .text(mapPhpTrainingTypes.name)
+                            .data('price', mapPhpTrainingTypes.price)
+                    })
+                );
 
             var levelSelectDom = $('<select>')
                 .append(
                     phpLevels.map(function(phpLevelMap) {
                         return $('<option>')
-                            .attr('value', phpLevelMap.label)
+                            .attr('value', phpLevelMap.id)
                             .text(phpLevelMap.label);
                     })
                 )
@@ -230,45 +242,21 @@
                 )
             formationSelectDom.select2({
                 theme: 'bootstrap4',
-                multiple: true,
-                ajax: {
-                    url: registrationInfoRoute, // URL de la source de données
-                    method: 'post',
-                    delay: 500, // Délai avant l'envoi de la requête après la saisie
-                    data: function(params) {
-                        return { // Paramètres envoyés avec la requête
-                            recherche: params.term, // terme de recherche saisi par l'utilisateur
-                            _token: $('[name=_token]').val(),
-                            student_id: inList.id,
-                            exclude: formationSelectDom.val(),
-                            formation: true
-                        };
-                    },
-                    processResults: function(data) {
-                        console.log(data);
-                        return {
-                            results: data.map(function(mapData) {
-                                return {
-                                    id: mapData.id,
-                                    text: mapData.name,
-                                    amount: mapData.price
-                                }
-                            }), // Les éléments à afficher dans le menu déroulant
-                        };
-                    },
-                    cache: true
-                }
+                multiple: true
             }).on('select2:select', function(event) {
-                var self = $(this);
-                var data = event.params.data;
+                var data = $(event.params.data.element).data();
                 var old = parseInt(amountInputDom.val() ? amountInputDom.val() : 0, 10);
-                amountInputDom.val(old + parseInt(data.amount, 10)).trigger('input');
+                amountInputDom.val(old + parseInt(data.price, 10)).trigger('input');
             }).on('select2:unselect', function(event) {
-                var self = $(this);
-                var data = event.params.data;
+                var data = $(event.params.data.element).data();
                 var old = parseInt(amountInputDom.val() ? amountInputDom.val() : 0, 10);
-                amountInputDom.val(old - parseInt(data.amount, 10)).trigger('input');
-            });
+                amountInputDom.val(Math.max(0, old - parseInt(data.price, 10))).trigger('input');
+            }).on('change', function() {
+                var self = $(this);
+                registerManager.inList[self.data('index')].trainingTypes = self.val().slice().map(function(mapValue) {
+                    return parseInt(mapValue, 10);
+                });
+            }).val(registerManager.inList[index].trainingTypes).trigger('change');
 
             var addFormationDom = $('<button>')
                 .addClass('btn btn-sm bg-gradient-info')
@@ -297,8 +285,9 @@
                         $('<div>')
                         .addClass('check')
                         .append(checkDom),
-                        $('<div>')
+                        $('<label>')
                         .addClass('name')
+                        .attr('for', 'check-in' + index)
                         .text(inList.name),
                         $('<div>')
                         .addClass('actions')
@@ -323,6 +312,7 @@
             }
             var checkDom = $('<input>')
                 .attr('type', 'checkbox')
+                .attr('id', 'check-not' + index)
                 .prop('checked', not.checked)
                 .data('index', index)
                 .on('change', function() {
@@ -341,12 +331,17 @@
                         $('<div>')
                         .addClass('check')
                         .append(checkDom),
-                        $('<div>')
+                        $('<label>')
                         .addClass('name')
+                        .attr('for', 'check-not' + index)
                         .text(not.name),
                         $('<div>')
                         .addClass('actions')
-                        .html('<strong>' + (not.prevLevel ? not.prevLevel : '') + '</strong>')
+                        .html('<strong>' + (not.prevLevel ? phpLevels.filter(function(filterLevel) {
+                            return filterLevel.id === parseInt(not.prevLevel, 10)
+                        }).map(function(mapLevel) {
+                            return mapLevel.label;
+                        }).join('') : '') + '</strong>')
                     )
                 )
             );
@@ -386,15 +381,15 @@
             var data = {
                 _token: $('[name=_token]').val(),
                 label: $('[name=label]').val(),
-                place: $('[name=place]').val(),
-                start_date: $('[name=start_date]').val() ? moment($('[name=start_date]').val(), 'DD-MM-YYYY').format() : null,
-                end_date: $('[name=end_date]').val() ? moment($('[name=end_date]').val(), 'DD-MM-YYYY').format() : null,
+                available_place: $('[name=place]').val(),
+                start_date: $('[name=start_date]').val() ? moment($('[name=start_date]').val(), 'DD-MM-YYYY').format('YYYY-MM-DD') : null,
+                end_date: $('[name=end_date]').val() ? moment($('[name=end_date]').val(), 'DD-MM-YYYY').format('YYYY-MM-DD') : null,
                 students: []
             }
             $.each(registerManager.inList, function(_, inList) {
                 data.students.push({
                     id: inList.id,
-                    formations: inList.formations,
+                    trainingTypes: inList.trainingTypes,
                     amount: inList.amount,
                     level: inList.level
                 })

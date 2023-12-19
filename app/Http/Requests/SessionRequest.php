@@ -24,15 +24,15 @@ class SessionRequest extends FormRequest {
         return [
             'id' => ['nullable', 'numeric'],
             'label' => ['nullable'],
-            'start_date' => ['required', 'date_format:Y-m-d\TH:i:sP'],
-            'end_date' => ['required', 'date_format:Y-m-d\TH:i:sP'],
-            'place' => ['required', 'numeric'],
+            'start_date' => ['required', 'date_format:Y-m-d'],
+            'end_date' => ['required', 'date_format:Y-m-d'],
+            'available_place' => ['required', 'numeric'],
             'students' => ['nullable', 'array'],
             'students.*.id' => ['required', 'numeric'],
-            'students.*.formations' => ['required', 'array', 'min:1'],
-            'students.*.formations.*' => ['required', 'numeric'],
+            'students.*.trainingTypes' => ['required', 'array', 'min:1'],
+            'students.*.trainingTypes.*' => ['required', 'numeric'],
             'students.*.amount' => ['required', 'numeric'],
-            'students.*.level' => ['required'],
+            'students.*.level' => ['required', 'numeric'],
         ];
     }
 }
