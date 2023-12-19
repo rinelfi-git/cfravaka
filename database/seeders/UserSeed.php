@@ -13,11 +13,17 @@ class UserSeed extends Seeder {
      * @return void
      */
     public function run() {
+        // User::create([
+        //     'username' => 'rinelfi',
+        //     'name'     => 'Rijaniaina Elie Fidèle',
+        //     'email'    => 'elierijaniaina@gmail.com',
+        //     'password' => Hash::make("c'est devenu difficile")
+        // ]);
         User::create([
-            'username' => 'rinelfi',
-            'name'     => 'Rijaniaina Elie Fidèle',
-            'email'    => 'elierijaniaina@gmail.com',
-            'password' => Hash::make("c'est devenu difficile")
+            'username' => 'rantoarijaona',
+            'name'     => 'Andriatsizehena Ranto Arijaona',
+            'email'    => 'rantoarijaona@gmail.com',
+            'password' => Hash::make("rantoarijaona")
         ]);
     }
 }
