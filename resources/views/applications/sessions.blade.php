@@ -157,7 +157,11 @@
                 success: function(response) {
                     $.each(response, function(key, value) {
                         var inputDom = $('#session-modal-form [name="' + key + '"]');
-                        inputDom.val(value);
+                        if (['start_date', 'end_date'].includes(key)) {
+                            inputDom.val(moment(value).format('DD-MM-YYYY'))
+                        } else {
+                            inputDom.val(value);
+                        }
                         inputDom.trigger('change');
                     });
                     $('#session-modal-form [name]').prop('disabled', false);

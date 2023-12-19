@@ -41,8 +41,7 @@ class ApplicationController extends Controller {
         ])->get(['id', 'name', 'email', 'phone', 'test_date', 'level_id']);
         return DataTables::of($students)
             ->addColumn('test_date', function ($student) {
-                setlocale(LC_TIME, 'fr_FR');
-                return !empty($student->test_date) ? $student->test_date->format('l j F Y') : '';
+                return !empty($student->test_date) ? $student->test_date->format('d/m/Y') : '';
             })
             ->addColumn('test_result', function ($student) {
                 $level = $student->level;
@@ -323,7 +322,7 @@ class ApplicationController extends Controller {
                 'id' => $registrationMap->student_id,
                 'name' => $student->name,
                 'amount' => $registrationMap->amount,
-                'operation_date' => $registrationMap->operation_date->format('d-m-Y'),
+                'operation_date' => $registrationMap->operation_date->format('Y-m-d'),
                 'trainingTypes' => $registrationMap->trainingTypes->pluck('id')->toArray(),
                 'level' => $registrationMap->level_id,
                 'prevLevel' => $prevLevel
