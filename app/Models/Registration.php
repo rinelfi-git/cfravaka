@@ -12,7 +12,7 @@ class Registration extends Model {
 
     // Casts - Complet
     protected $casts = [
-        'operation_date' => 'date',    // Cast en tant que date
+        'operation_date' => 'date:Y-m-d',    // Cast en tant que date
         'amount' => 'integer',         // Cast en tant que integer
     ];
 

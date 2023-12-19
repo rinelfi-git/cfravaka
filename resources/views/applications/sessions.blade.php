@@ -1,8 +1,8 @@
 @extends('authed')
 @section('title', 'Session')
 @section('dynamic-style')
-	
-	<style>
+
+<style>
     .dual-list-session {
         display: flex;
         flex-direction: row;
@@ -24,7 +24,7 @@
         padding: 0 5px;
     }
 
-    .dual-list-actions > * {
+    .dual-list-actions>* {
         flex: 0 0 auto;
         width: auto;
         display: block;
@@ -38,7 +38,7 @@
         overflow-y: auto;
     }
 
-    .student-list > .card:last-child {
+    .student-list>.card:last-child {
         margin: 0;
     }
 
@@ -74,66 +74,35 @@
 </style>
 @endsection
 @section('wrapped-content')
-	<div class="card">
+<div class="card">
     <div class="card-header">
         <div class="card-tools">
             <button type="button" class="btn bg-gradient-dark" data-toggle="modal" data-target="#session-modal-form">
                 Nouvelle entrée
             </button>
-	        @include('partials.forms.session-form', [
-				'students' => $students,
-				'levels' => $levels,
-				'trainingTypes' => $trainingTypes
-				])
+            @include('partials.forms.session-form', [
+            'students' => $students,
+            'levels' => $levels,
+            'trainingTypes' => $trainingTypes
+            ])
         </div>
     </div>
-    <div class="card-body p-0">
-        <table class="table">
+    <div class="card-body table-responsive">
+        <table id="session-datatable" class="table table-bordered table-striped dt-responsive nowrap">
             <thead>
                 <tr>
                     <th>Libellé</th>
-                    <th>Date de début</th>
-                    <th>Date de fin</th>
-                    <th>Nombre de places restantes</th>
-                    <th>Actions</th>
+                    <th>Débute le</th>
+                    <th>Se termine le</th>
+                    <th>Nombre de place alouée</th>
+                    <th>Nombre de place disponible</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>
-                        <input type="text" class="form-control" placeholder="Libellé" autoComplete="off"/>
-                    </td>
-                    <td><input type="text" class="form-control" placeholder="Date de début" autoComplete="off"/></td>
-                    <td><input type="text" class="form-control" placeholder="Date de fin" autoComplete="off"/></td>
-                    <td><input type="text" class="form-control" placeholder="Nombre de places restantes"
-                               autoComplete="off"/></td>
-                </tr>
-                <tr>
-                    <td>Session Janvier</td>
-                    <td>1 Janvier 2024</td>
-                    <td>15 Fevrier 2024</td>
-                    <td>5</td>
-                    <td>
-                        <div class="btn-group">
-                            <button type="button" data-toggle={ 'modal' } data-target={ '#group-arrangement' } class="btn btn-sm bg-gradient-dark">Groupes
-	                        </button>
-	                        <button type="button" class="btn btn-sm bg-gradient-info">
-                                <span class="fa fa-info"></span>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
+
             </tbody>
         </table>
-    </div>
-    <div class="card-footer clearfix">
-        <ul class="pagination pagination-sm m-0 float-right">
-            <li class="page-item"><a class="page-link" href="#">«</a></li>
-            <li class="page-item"><a class="page-link" href="#">1</a></li>
-            <li class="page-item"><a class="page-link" href="#">2</a></li>
-            <li class="page-item"><a class="page-link" href="#">3</a></li>
-            <li class="page-item"><a class="page-link" href="#">»</a></li>
-        </ul>
     </div>
     <div class="modal fade" id="group-arrangement">
         <div class="modal-dialog">
@@ -166,55 +135,75 @@
 </div>
 @endsection
 @section('dynamic-script')
-	<script>
+<script>
     var sessionDatatable;
-    
-    function sessionDataTable(options){
-	    $('#student-datatable').on('click', '.open-update-modal', function(){
-		    var self = $(this);
-		    if (typeof resetForm === 'function') {
-			    $('#student-modal-form [name]').prop('disabled', true);
-			    resetForm.call();
-		    }
-		    $('#student-modal-form').modal('show');
-		    $.ajax({
-			    url : self.data('route'),
-			    method : 'post',
-			    type : 'json',
-			    data : {
-				    id : self.data('id'),
-				    _token : options.token
-			    },
-			    success : function(response){
-				    $.each(response, function(key, value){
-					    var inputDom = $('#student-modal-form [name="' + key + '"]');
-					    inputDom.val(value);
-					    inputDom.trigger('change');
-				    });
-				    $('#student-modal-form [name]').prop('disabled', false);
-			    }
-		    });
-	    });
-	    return $('#student-datatable').DataTable({
-		    responsive : true,
-		    processing : true,
-		    serverSide : true,
-		    ajax : {
-			    url : options.dataSource,
-			    method : 'GET'
-		    },
-		    columns : [{
-			    data : 'action',
-			    orderable : false,
-			    searchable : false
-		    }]
-	    });
+
+    function sessionDataTable(options) {
+        $('#session-datatable').on('click', '.open-update-modal', function() {
+            var self = $(this);
+            if (typeof resetForm === 'function') {
+                $('#session-modal-form [name]').prop('disabled', true);
+                resetForm.call();
+            }
+            $('#session-modal-form').modal('show');
+            $.ajax({
+                url: self.data('route'),
+                method: 'post',
+                type: 'json',
+                data: {
+                    id: self.data('id'),
+                    _token: options.token
+                },
+                success: function(response) {
+                    $.each(response, function(key, value) {
+                        var inputDom = $('#session-modal-form [name="' + key + '"]');
+                        inputDom.val(value);
+                        inputDom.trigger('change');
+                    });
+                    $('#session-modal-form [name]').prop('disabled', false);
+                    response.students.forEach(function(student) {
+                        student.checked = false;
+                        registerManager.inList.push(student);
+                        var studentNotIndex = registerManager.not.findIndex(function(findStudent) {
+                            return findStudent.id === student.id;
+                        });
+                        registerManager.not.splice(studentNotIndex, 1);
+                    });
+                    console.log('Rinelfi response', response);
+                    buildRegisterManager.call();
+                }
+            });
+        });
+        return $('#session-datatable').DataTable({
+            responsive: true,
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: options.dataSource,
+                method: 'GET'
+            },
+            columns: [{
+                data: 'label'
+            }, {
+                data: 'start_date'
+            }, {
+                data: 'end_date'
+            }, {
+                data: 'available_place'
+            }, {
+                data: 'occupied_place'
+            }, {
+                data: 'action',
+                orderable: false,
+                searchable: false
+            }]
+        });
     }
-    
-    $(function(){
-	    sessionDatatable = sessionDataTable({
-		    dataSource : "{{route('app.list.sessions.datatable')}}",
-		    token : "{{session('_token')}}"
+
+    $(function() {
+        sessionDatatable = sessionDataTable({
+            dataSource: "{{route('app.list.sessions.datatable')}}",
+            token: "{{session('_token')}}"
         });
     })
 </script>

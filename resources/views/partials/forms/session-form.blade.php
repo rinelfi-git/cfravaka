@@ -11,6 +11,7 @@
                 <form autocomplete="off" action="{{route('app.list.sessions.form')}}">
                     <input autocomplete="false" name="hidden" type="text" style="display:none;">
                     @csrf
+                    <input type="hidden" name="id">
                     <div class="row">
                         <div class="col-sm-6 col-xs-12">
                             <div class="form-group">
@@ -21,7 +22,7 @@
                         <div class="col-sm-6 col-xs-12">
                             <div class="form-group">
                                 <label>Nombre de place alouée <span class="text-danger">*</span></label>
-                                <input required type="number" name="place" class="form-control" />
+                                <input required type="number" name="available_place" class="form-control" />
                             </div>
                         </div>
                         <div class="col-sm-6 col-xs-12">
@@ -88,15 +89,6 @@
         not: [],
         inList: []
     }
-    phpStudents.forEach(function(phpStudent) {
-        registerManager.not.push({
-            checked: false,
-            id: phpStudent.id,
-            name: phpStudent.name,
-            prevLevel: phpStudent.level,
-            trainingTypes: []
-        })
-    });
     var getStudentLevelLabel = function(id) {
         return typeof id !== 'number' ? '' : phpLevels.find(function(findLevel) {
             return findLevel.id === id;
@@ -349,15 +341,25 @@
     }
 
     var resetForm = function() {
+        registerManager = {
+            not: [],
+            inList: []
+        }
+        phpStudents.forEach(function(phpStudent) {
+            registerManager.not.push({
+                checked: false,
+                id: phpStudent.id,
+                name: phpStudent.name,
+                prevLevel: phpStudent.level,
+                trainingTypes: []
+            })
+        });
+        buildRegisterManager();
         $('#session-modal-form').find('[name]').filter(function() {
             return $(this).attr('name') !== '_token';
         }).each(function() {
             var self = $(this);
-            if (self.attr('value')) {
-                self.val(self.attr('value'))
-            } else {
-                self.val('')
-            }
+            self.val('')
             self.trigger('change');
         });
     }
@@ -368,7 +370,7 @@
             $(this).find('[name="partner_id"]').select2({
                 theme: 'bootstrap4'
             }).val('').trigger('change');
-            buildRegisterManager();
+            resetForm();
         }).on('hidden.bs.modal', function() {
             $(this).find('[name="partner_id"]').select2('destroy');
         });
@@ -381,11 +383,14 @@
             var data = {
                 _token: $('[name=_token]').val(),
                 label: $('[name=label]').val(),
-                available_place: $('[name=place]').val(),
+                available_place: $('[name=available_place]').val(),
                 start_date: $('[name=start_date]').val() ? moment($('[name=start_date]').val(), 'DD-MM-YYYY').format('YYYY-MM-DD') : null,
                 end_date: $('[name=end_date]').val() ? moment($('[name=end_date]').val(), 'DD-MM-YYYY').format('YYYY-MM-DD') : null,
                 students: []
             }
+            if ($('[name=id]').val()) {
+			    data.id = $('[name=id]').val();
+		    }
             $.each(registerManager.inList, function(_, inList) {
                 data.students.push({
                     id: inList.id,
@@ -400,7 +405,11 @@
                 method: 'post',
                 data: data,
                 success: function() {
-
+                    if (typeof sessionDatatable !== 'undefined') {
+                        sessionDatatable.ajax.reload();
+                    }
+                    itsModalDom.modal('hide');
+                    resetForm();
                 }
             })
         });
@@ -416,6 +425,7 @@
             });
             $.each(filtered, function(_, filter) {
                 filter.checked = false;
+                filter.level = filter.prevLevel;
                 registerManager.inList.push(filter);
             });
             $.each(filtered, function(_, fors) {

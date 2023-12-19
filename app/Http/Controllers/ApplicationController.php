@@ -281,7 +281,28 @@ class ApplicationController extends Controller {
     }
 
     public function sessionTableList(Request $request) {
-
+        $sessions = Session::get();
+        return DataTables::of($sessions)
+            ->addColumn('start_date', function ($session) {
+                return $session->start_date->format('d/m/Y');
+            })
+            ->addColumn('end_date', function ($session) {
+                return $session->end_date->format('d/m/Y');
+            })
+            ->addColumn('available_place', function ($session) {
+                return $session->available_place;
+            })
+            ->addColumn('occupied_place', function ($session) {
+                return $session->students()->count();
+            })
+            ->addColumn('action', function ($session) {
+                return '
+                <div class="btn-group">
+                    <button type="button" class="btn bg-gradient-primary open-update-modal" data-route="' . route('app.list.sessions.get') . '" data-id="' . $session->id . '">
+                        <i class="fas fa-pen"></i>
+                    </button>
+                </div>';
+            })->make(true);
     }
 
     public function studentRegistrationDataRequest(Request $request) {
@@ -289,6 +310,23 @@ class ApplicationController extends Controller {
     }
 
     public function sessionGet(Request $request) {
+        $session = Session::find($request->input('id'));
+        $output = $session->toArray();
+        $output['students'] = $session->registrations()->get()->map(function($registrationMap) {
+            $prevLevel = Registration::where(['student_id'=> $registrationMap->student_id])->select('level_id')->orderBy('id', 'desc')->skip(1)->first();
+            $student = Student::with('level')->where('id', $registrationMap->student_id)->get()->first();
+            $prevLevel = !empty($prevLevel) && !empty($prevLevel->level) ? $prevLevel->level->id : (!empty($student->level) ? $student->level->id : null);
+            return [
+                'id' => $registrationMap->student_id,
+                'name' => $student->name,
+                'amount' => $registrationMap->amount,
+                'operation_date' => $registrationMap->operation_date->format('d-m-Y'),
+                'trainingTypes' => $registrationMap->trainingTypes->pluck('id')->toArray(),
+                'level' => $registrationMap->level_id,
+                'prevLevel' =>$prevLevel
+            ];
+        });
+        return response()->json($output);
     }
 
     public function sessionDuplicate(int $id) {
@@ -323,12 +361,16 @@ class ApplicationController extends Controller {
             }
             $registrationWhere = $student->sessions()->where('session_id', $session->id)->first()->pivot->toArray();
             $registration = Registration::where($registrationWhere)->get()->first();
+            $registrationOldAmount = $registration->amount;
+            if($linkExists) {
+                $registration->update(['amount' => $studentAmount]);
+            }
             $registration->trainingTypes()->detach();
             $registration->trainingTypes()->attach($validateStudent['trainingTypes']);
             $outputRegistrations = $registration->toArray();
             $outputRegistrations['student'] = $student->toArray();
 
-            $paymentHistory = PaymentHistory::where('operation_date', $registration->operation_date)->get()->first();
+            $paymentHistory = $registration->paymentHistories()->where('amount', -$registrationOldAmount)->whereBetween('operation_date', [$registration->operation_date->format('Y-m-d 00:00:00'), $registration->operation_date->format('Y-m-d 23:59:59')])->get()->first();
             if (!empty($paymentHistory)) {
                 $paymentHistory->update(['amount' => -1 * $studentAmount]);
             } else {
