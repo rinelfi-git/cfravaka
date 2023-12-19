@@ -18,6 +18,21 @@ class Student extends Model {
         'test_date' => 'date:Y-m-d',    // Cast en tant que date
     ];
 
+    public static function getWithLatestLevel() {
+        return self::with('latestRegistration.level')->get()->map(function ($student) {
+            $level = !empty($student->latestRegistration) && !empty($student->latestRegistration->level) ? $student->latestRegistration->level->id : (!empty($student->level) ? $student->level->id : null);
+            return [
+                'id'    => $student->id,
+                'name'  => $student->name,
+                'level' => $level,
+            ];
+        });
+    }
+
+    public function latestRegistration() {
+        return $this->hasOne(Registration::class)->latestOfMany();
+    }
+
     // Relations
     public function sessions() {
         return $this->belongsToMany(Session::class, 'registrations'); // Si vous avez une table pivot 'registrations' pour les sessions inscrites
